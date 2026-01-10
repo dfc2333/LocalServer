@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>离线 Markdown 和 LaTeX 解析器</title>
+    <script>
+        // MathJax 配置
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true,
+                processEnvironments: true,
+                tags: 'ams'
+            },
+            options: {
+                skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+                ignoreHtmlClass: 'tex-ignore'
+            },
+            startup: {
+                ready: () => {
+                    console.log('MathJax 已加载并准备就绪');
+                    MathJax.startup.defaultReady();
+                    updatePreview();
+                }
+            }
+        };
+    </script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(90deg, #2c3e50, #4a6491);
+            color: white;
+            padding: 25px 30px;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.5;
+        }
+        
+        .content {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 25px;
+            gap: 25px;
+        }
+        
+        .editor-section, .preview-section {
+            flex: 1;
+            min-width: 300px;
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: #2c3e50;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #4a6491;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section-title i {
+            color: #4a6491;
+        }
+        
+        .editor-container {
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            overflow: hidden;
+            height: 500px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .editor-toolbar {
+            background-color: #f1f5f9;
+            padding: 12px 15px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .tool-btn {
+            padding: 6px 12px;
+            background-color: #4a6491;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.3s;
+        }
+        
+        .tool-btn:hover {
+            background-color: #2c3e50;
+        }
+        
+        textarea {
+            width: 100%;
+            flex-grow: 1;
+            padding: 20px;
+            border: none;
+            resize: none;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 15px;
+            line-height: 1.5;
+            outline: none;
+            background-color: #f9fbfd;
+        }
+        
+        .preview-container {
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            overflow-y: auto;
+            padding: 25px;
+            height: 500px;
+            background-color: white;
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.05);
+        }
+        
+        .markdown-body {
+            font-size: 16px;
+        }
+        
+        .markdown-body h1, .markdown-body h2, .markdown-body h3 {
+            margin-top: 24px;
+            margin-bottom: 16px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .markdown-body h1 {
+            font-size: 2em;
+            border-bottom: 2px solid #eaecef;
+            padding-bottom: 0.3em;
+        }
+        
+        .markdown-body h2 {
+            font-size: 1.5em;
+            border-bottom: 1px solid #eaecef;
+            padding-bottom: 0.3em;
+        }
+        
+        .markdown-body p {
+            margin-bottom: 16px;
+        }
+        
+        .markdown-body code {
+            background-color: rgba(27,31,35,0.05);
+            border-radius: 3px;
+            font-family: 'SFMono-Regular', Consolas, monospace;
+            padding: 0.2em 0.4em;
+            font-size: 0.9em;
+        }
+        
+        .markdown-body pre {
+            background-color: #f6f8fa;
+            border-radius: 6px;
+            padding: 16px;
+            overflow: auto;
+            margin-bottom: 16px;
+        }
+        
+        .markdown-body blockquote {
+            border-left: 4px solid #4a6491;
+            padding-left: 16px;
+            color: #6a737d;
+            margin-bottom: 16px;
+        }
+        
+        .markdown-body table {
+            border-collapse: collapse;
+            margin-bottom: 16px;
+            width: 100%;
+        }
+        
+        .markdown-body th, .markdown-body td {
+            border: 1px solid #dfe2e5;
+            padding: 6px 13px;
+        }
+        
+        .markdown-body th {
+            background-color: #f6f8fa;
+            font-weight: 600;
+        }
+        
+        .examples {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .examples h3 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+        
+        .example-btns {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .example-btn {
+            padding: 8px 16px;
+            background-color: #e9ecef;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .example-btn:hover {
+            background-color: #4a6491;
+            color: white;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+            font-size: 0.9rem;
+            border-top: 1px solid #dee2e6;
+            margin-top: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .content {
+                flex-direction: column;
+            }
+            
+            .editor-section, .preview-section {
+                width: 100%;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+        }
+        
+        .math-block {
+            text-align: center;
+            margin: 20px 0;
+            padding: 10px;
+            overflow-x: auto;
+        }
+        
+        .mjx-chtml {
+            outline: none;
+        }
+        
+        .status {
+            padding: 10px 15px;
+            background-color: #d4edda;
+            color: #155724;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        
+        .status.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>离线 Markdown 和 LaTeX 解析器</h1>
+            <p class="subtitle">使用 MathJax 和 markdown-it 在浏览器中离线解析 Markdown 文档和 LaTeX 数学公式。无需网络连接，所有处理都在本地完成。</p>
+        </header>
+        
+        <div class="status" id="status"></div>
+        
+        <div class="content">
+            <div class="editor-section">
+                <h2 class="section-title"><i>📝</i> 编辑器</h2>
+                <div class="editor-container">
+                    <div class="editor-toolbar">
+                        <button class="tool-btn" onclick="insertText('# 标题')">H1</button>
+                        <button class="tool-btn" onclick="insertText('## 标题')">H2</button>
+                        <button class="tool-btn" onclick="insertText('**粗体**')">粗体</button>
+                        <button class="tool-btn" onclick="insertText('*斜体*')">斜体</button>
+                        <button class="tool-btn" onclick="insertText('[链接](https://example.com)')">链接</button>
+                        <button class="tool-btn" onclick="insertText('```\n代码块\n```')">代码块</button>
+                        <button class="tool-btn" onclick="insertText('$内联公式$')">行内公式</button>
+                        <button class="tool-btn" onclick="insertText('$$\n块级公式\n$$')">块级公式</button>
+                        <button class="tool-btn" onclick="clearEditor()">清空</button>
+                    </div>
+                    <textarea id="markdown-input" placeholder="在此输入 Markdown 文本...&#10;&#10;支持：&#10;- 标题、列表、表格&#10;- 代码块和行内代码&#10;- 链接和图片&#10;- LaTeX 数学公式：$E = mc^2$&#10;- 块级公式：$$ \int_a^b f(x)dx $$" autofocus></textarea>
+                </div>
+            </div>
+            
+            <div class="preview-section">
+                <h2 class="section-title"><i>👁️</i> 预览</h2>
+                <div class="preview-container">
+                    <div id="preview" class="markdown-body"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="examples">
+            <h3>示例</h3>
+            <p>点击下面的按钮加载示例内容：</p>
+            <div class="example-btns">
+                <button class="example-btn" onclick="loadExample('math')">数学公式示例</button>
+                <button class="example-btn" onclick="loadExample('physics')">物理公式示例</button>
+                <button class="example-btn" onclick="loadExample('markdown')">Markdown 示例</button>
+                <button class="example-btn" onclick="loadExample('matrix')">矩阵示例</button>
+                <button class="example-btn" onclick="loadExample('empty')">清空编辑器</button>
+            </div>
+        </div>
+        
+        <footer>
+            <p>© 2023 离线 Markdown 和 LaTeX 解析器 | 使用 MathJax 3 和 markdown-it 库 | 完全离线工作</p>
+        </footer>
+    </div>
+
+    <!-- 内联 markdown-it 库 -->
+    <script>
+        // markdown-it 库的简化版本 (核心功能)
+        // 在实际应用中，您可能需要使用完整的 markdown-it 库
+        // 这里我们只实现核心的 Markdown 解析功能
+        class MarkdownIt {
+            constructor(options) {
+                this.options = options || {};
+                this.rules = {
+                    heading: /^ *(#{1,6}) *([^\n]+?) *#* *(?:\n+|$)/,
+                    hr: /^( *[-*_]){3,} *(?:\n+|$)/,
+                    blockquote: /^( *>[^\n]+(\n[^\n]+)*\n*)+/,
+                    list: /^( *)([*+-]|\d+\.) [\s\S]+?(?:\n+(?=\1?(?:[-*_] *){3,}(?:\n+|$))|\n+(?= *\[([^\]]+)\]: *<?([^\s>]+)>?(?: +["(]([^\n]+)[")])? *(?:\n+|$))|\n{2,}(?! )(?!\1)(?!\d+\. ))/,
+                    code: /^((?: {4}|\t)[^\n]+\n*)+/,
+                    fence: /^ *(`{3,}|~{3,}) *(\S+)? *\n([\s\S]+?)\s*\1 *(?:\n+|$)/,
+                    html: /^ *(?:<!--[\s\S]*?-->|<!\[CDATA\[[\s\S]*?\]\]>|<(\w+)(?:[^>]*?)>[\s\S]*?<\/\1>|<(\w+)(?:[^>]*?)\/>) *(?:\n{2,}|\s*$)/,
+                    def: /^ *\[([^\]]+)\]: *<?([^\s>]+)>?(?: +["(]([^\n]+)[")])? *(?:\n+|$)/,
+                    table: /^ *\|(.+)\n *\|( *[-:]+[-| :]*)\n((?: *\|.*(?:\n|$))*)/,
+                    lheading: /^([^\n]+)\n *(=|-){2,} *(?:\n+|$)/,
+                    paragraph: /^([^\n]+(?:\n(?! *(`{3,}|~{3,})[^.])(?! *\[([^\]]+)\]: *<?([^\s>]+)>?(?: +["(]([^\n]+)[")])? *(?:\n+|$))(?!\d+\. )(?! *[-*+] )(?! *> )(?!\1\.)(?! *\d\.)(?!#{1,6} )(?! *$)[^\n]+)*\n*)+/,
+                    text: /^[^\n]+/,
+                    escape: /^\\([\\`*{}\[\]()#+\-.!_>])/,
+                    tag: /^<!--[\s\S]*?-->|^<\/?\w+(?:"[^"]*"|'[^']*'|[^'">])*?>/,
+                    link: /^!?\[(inside)\]\(href\)/,
+                    reflink: /^!?\[(inside)\]\s*\[([^\]]*)\]/,
+                    nolink: /^!?\[((?:\[[^\]]*\]|[^\[\]])*)\]/,
+                    strong: /^__([\s\S]+?)__(?!_)|^\*\*([\s\S]+?)\*\*(?!\*)/,
+                    em: /^_([^\s_](?:[^_]*[^\s_])?)_(?!_)|^\*([^\s*](?:[^*]*[^\s*])?)\*(?!\*)/,
+                    code_inline: /^(`+)([\s\S]*?[^`])\1(?!`)/,
+                    br: /^ {2,}\n(?!\s*$)/,
+                    del: /^~~(?=\S)([\s\S]*?\S)~~/,
+                    inlineText: /^[\s\S]+?(?=[\\<!\[_*`$]| {2,}\n|$)/
+                };
+            }
+            
+            parse(src) {
+                let tokens = [];
+                let cap;
+                
+                while (src) {
+                    // 转义字符
+                    if (cap = this.rules.escape.exec(src)) {
+                        src = src.substring(cap[0].length);
+                        tokens.push({ type: 'text', content: cap[1] });
+                        continue;
+                    }
+                    
+                    // 代码
+                    if (cap = this.rules.code_inline.exec(src)) {
+                        src = src.substring(cap[0].length);
+                        tokens.push({ type: 'code_inline', content: cap[2] });
+                        continue;
+                    }
+                    
+                    // 粗体
+                    if (cap = this.rules.strong.exec(src)) {
+                        src = src.substring(cap[0].length);
+                        tokens.push({ type: 'strong', content: cap[1] || cap[2] });
+                        continue;
+                    }
+                    
+                    // 斜体
+                    if (cap = this.rules.em.exec(src)) {
+                        src = src.substring(cap[0].length);
+                        tokens.push({ type: 'em', content: cap[1] || cap[2] });
+                        continue;
+                    }
+                    
+                    // 删除线
+                    if (cap = this.rules.del.exec(src)) {
+                        src = src.substring(cap[0].length);
+                        tokens.push({ type: 'del', content: cap[1] });
+                        continue;
+                    }
+                    
+                    // 行内代码
+                    if (cap = this.rules.code_inline.exec(src)) {
+                        src = src.substring(cap[0].length);
+                        tokens.push({ type: 'code_inline', content: cap[2] });
+                        continue;
+                    }
+                    
+                    // 换行
+                    if (cap = this.rules.br.exec(src)) {
+                        src = src.substring(cap[0].length);
+                        tokens.push({ type: 'br' });
+                        continue;
+                    }
+                    
+                    // 文本
+                    if (cap = this.rules.inlineText.exec(src)) {
+                        src = src.substring(cap[0].length);
+                        tokens.push({ type: 'text', content: cap[0] });
+                        continue;
+                    }
+                }
+                
+                return tokens;
+            }
+            
+            render(tokens) {
+                let result = '';
+                
+                for (let token of tokens) {
+                    switch (token.type) {
+                        case 'text':
+                            result += token.content;
+                            break;
+                        case 'strong':
+                            result += `<strong>${this.renderInline(token.content)}</strong>`;
+                            break;
+                        case 'em':
+                            result += `<em>${this.renderInline(token.content)}</em>`;
+                            break;
+                        case 'del':
+                            result += `<del>${this.renderInline(token.content)}</del>`;
+                            break;
+                        case 'code_inline':
+                            result += `<code>${token.content}</code>`;
+                            break;
+                        case 'br':
+                            result += `<br>`;
+                            break;
+                    }
+                }
+                
+                return result;
+            }
+            
+            renderInline(content) {
+                // 简化版本，仅处理基本转义
+                return content.replace(/&/g, '&amp;')
+                             .replace(/</g, '&lt;')
+                             .replace(/>/g, '&gt;')
+                             .replace(/"/g, '&quot;')
+                             .replace(/'/g, '&#039;');
+            }
+            
+            // 简化的 markdown 解析
+            renderMarkdown(text) {
+                // 这里使用一个简化的解析器
+                // 在实际应用中，应该使用完整的 markdown-it
+                let html = text;
+                
+                // 标题
+                html = html.replace(/^# (.*$)/gm, '<h1>$1</h1>');
+                html = html.replace(/^## (.*$)/gm, '<h2>$1</h2>');
+                html = html.replace(/^### (.*$)/gm, '<h3>$1</h3>');
+                html = html.replace(/^#### (.*$)/gm, '<h4>$1</h4>');
+                html = html.replace(/^##### (.*$)/gm, '<h5>$1</h5>');
+                html = html.replace(/^###### (.*$)/gm, '<h6>$1</h6>');
+                
+                // 水平线
+                html = html.replace(/^[-*_]{3,}$/gm, '<hr>');
+                
+                // 粗体
+                html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                html = html.replace(/__(.*?)__/g, '<strong>$1</strong>');
+                
+                // 斜体
+                html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+                html = html.replace(/_(.*?)_/g, '<em>$1</em>');
+                
+                // 删除线
+                html = html.replace(/~~(.*?)~~/g, '<del>$1</del>');
+                
+                // 行内代码
+                html = html.replace(/`(.*?)`/g, '<code>$1</code>');
+                
+                // 代码块
+                html = html.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+                
+                // 块引用
+                html = html.replace(/^> (.*$)/gm, '<blockquote>$1</blockquote>');
+                
+                // 无序列表
+                html = html.replace(/^\s*[-*+] (.*$)/gm, '<li>$1</li>');
+                html = html.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
+                
+                // 链接
+                html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+                
+                // 图片
+                html = html.replace(/!\[([^\]]+)\]\(([^)]+)\)/g, '<img src="$2" alt="$1">');
+                
+                // 段落
+                let lines = html.split('\n');
+                let result = [];
+                let inParagraph = false;
+                let paragraphContent = '';
+                
+                for (let line of lines) {
+                    if (line.trim() === '') {
+                        if (inParagraph) {
+                            result.push(`<p>${paragraphContent}</p>`);
+                            paragraphContent = '';
+                            inParagraph = false;
+                        }
+                        result.push('');
+                    } else if (line.startsWith('<') && line.endsWith('>')) {
+                        if (inParagraph) {
+                            result.push(`<p>${paragraphContent}</p>`);
+                            paragraphContent = '';
+                            inParagraph = false;
+                        }
+                        result.push(line);
+                    } else {
+                        if (!inParagraph) inParagraph = true;
+                        paragraphContent += (paragraphContent ? ' ' : '') + line;
+                    }
+                }
+                
+                if (inParagraph) {
+                    result.push(`<p>${paragraphContent}</p>`);
+                }
+                
+                return result.join('\n');
+            }
+        }
+        
+        // 创建 markdown-it 实例
+        const md = new MarkdownIt();
+    </script>
+    
+    <!-- MathJax 3 库 -->
+    <script id="MathJax-script" async src="http://mx.j2inter.com/res/mathjax.js"></script>
+    
+    <script>
+        // 获取 DOM 元素
+        const markdownInput = document.getElementById('markdown-input');
+        const preview = document.getElementById('preview');
+        const status = document.getElementById('status');
+        
+        // 初始内容
+        const initialContent = `# Markdown 与 LaTeX 示例
+
+## 数学公式示例
+
+### 行内公式
+质能方程：$E = mc^2$，欧拉公式：$e^{i\\pi} + 1 = 0$。
+
+### 块级公式
+勾股定理：
+$$ a^2 + b^2 = c^2 $$
+
+二次方程求根公式：
+$$ x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a} $$
+
+## 物理公式示例
+
+### 薛定谔方程
+$$ i\\hbar\\frac{\\partial}{\\partial t}\\Psi(\\mathbf{r},t) = \\hat{H}\\Psi(\\mathbf{r},t) $$
+
+### 麦克斯韦方程组
+$$
+\\begin{aligned}
+\\nabla \\cdot \\mathbf{E} &= \\frac{\\rho}{\\varepsilon_0} \\\\
+\\nabla \\cdot \\mathbf{B} &= 0 \\\\
+\\nabla \\times \\mathbf{E} &= -\\frac{\\partial \\mathbf{B}}{\\partial t} \\\\
+\\nabla \\times \\mathbf{B} &= \\mu_0\\mathbf{J} + \\mu_0\\varepsilon_0\\frac{\\partial \\mathbf{E}}{\\partial t}
+\\end{aligned}
+$$
+
+## Markdown 功能示例
+
+### 文本样式
+这是**粗体文本**，这是*斜体文本*，这是~~删除线文本~~。
+
+### 代码
+行内代码：\`print("Hello World")\`
+
+代码块：
+\`\`\`python
+def fibonacci(n):
+    if n <= 1:
+        return n
+    else:
+        return fibonacci(n-1) + fibonacci(n-2)
+\`\`\`
+
+### 列表
+- 无序列表项 1
+- 无序列表项 2
+  - 嵌套列表项
+
+1. 有序列表项 1
+2. 有序列表项 2
+
+### 引用
+> 这是引用文本。
+> 引用可以有多行。
+
+### 链接
+[GitHub](https://github.com) 是一个代码托管平台。
+
+---
+*最后更新: ${new Date().toLocaleDateString()}*`;
+        
+        // 设置初始内容
+        markdownInput.value = initialContent;
+        
+        // 更新预览
+        function updatePreview() {
+            const markdownText = markdownInput.value;
+            
+            // 使用 markdown-it 渲染 Markdown
+            const html = md.renderMarkdown(markdownText);
+            
+            // 更新预览区域
+            preview.innerHTML = html;
+            
+            // 如果有 MathJax，重新处理数学公式
+            if (window.MathJax) {
+                MathJax.typesetPromise([preview]).catch(err => console.log('MathJax 错误:', err));
+            }
+            
+            // 显示状态信息
+            showStatus('预览已更新', 'success');
+        }
+        
+        // 显示状态信息
+        function showStatus(message, type = 'info') {
+            status.textContent = message;
+            status.className = 'status show';
+            
+            if (type === 'success') {
+                status.style.backgroundColor = '#d4edda';
+                status.style.color = '#155724';
+            } else if (type === 'error') {
+                status.style.backgroundColor = '#f8d7da';
+                status.style.color = '#721c24';
+            } else {
+                status.style.backgroundColor = '#d1ecf1';
+                status.style.color = '#0c5460';
+            }
+            
+            // 3秒后隐藏
+            setTimeout(() => {
+                status.classList.remove('show');
+            }, 3000);
+        }
+        
+        // 插入文本到编辑器
+        function insertText(text) {
+            const textarea = markdownInput;
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const before = textarea.value.substring(0, start);
+            const after = textarea.value.substring(end);
+            
+            textarea.value = before + text + after;
+            textarea.focus();
+            textarea.selectionStart = textarea.selectionEnd = start + text.length;
+            
+            updatePreview();
+            showStatus(`已插入: ${text}`, 'success');
+        }
+        
+        // 清空编辑器
+        function clearEditor() {
+            markdownInput.value = '';
+            updatePreview();
+            showStatus('编辑器已清空', 'info');
+        }
+        
+        // 加载示例
+        function loadExample(type) {
+            let content = '';
+            
+            switch(type) {
+                case 'math':
+                    content = `# 数学公式示例
+
+## 基本运算
+加法：$a + b$
+减法：$a - b$
+乘法：$a \\times b$ 或 $a \\cdot b$
+除法：$\\frac{a}{b}$
+
+## 微积分
+导数：$f'(x) = \\lim_{h\\to 0} \\frac{f(x+h)-f(x)}{h}$
+
+积分：
+$$ \\int_a^b f(x) dx = F(b) - F(a) $$
+
+多重积分：
+$$ \\iiint_V f(x,y,z) dx dy dz $$
+
+## 级数
+泰勒级数：
+$$ f(x) = \\sum_{n=0}^{\\infty} \\frac{f^{(n)}(a)}{n!} (x-a)^n $$
+
+傅里叶级数：
+$$ f(x) = \\frac{a_0}{2} + \\sum_{n=1}^{\\infty} [a_n \\cos(nx) + b_n \\sin(nx)] $$`;
+                    break;
+                    
+                case 'physics':
+                    content = `# 物理公式示例
+
+## 经典力学
+牛顿第二定律：
+$$ F = ma $$
+
+动能：
+$$ E_k = \\frac{1}{2}mv^2 $$
+
+万有引力定律：
+$$ F = G\\frac{m_1 m_2}{r^2} $$
+
+## 电磁学
+库仑定律：
+$$ F = \\frac{1}{4\\pi\\varepsilon_0} \\frac{q_1 q_2}{r^2} $$
+
+欧姆定律：
+$$ V = IR $$
+
+洛伦兹力：
+$$ \\mathbf{F} = q(\\mathbf{E} + \\mathbf{v} \\times \\mathbf{B}) $$
+
+## 相对论
+时间膨胀：
+$$ \\Delta t' = \\frac{\\Delta t}{\\sqrt{1 - \\frac{v^2}{c^2}}} $$
+
+长度收缩：
+$$ L' = L \\sqrt{1 - \\frac{v^2}{c^2}} $$
+
+相对论性能量：
+$$ E = \\frac{mc^2}{\\sqrt{1 - \\frac{v^2}{c^2}}} $$`;
+                    break;
+                    
+                case 'markdown':
+                    content = `# Markdown 示例
+
+## 文本格式
+**粗体文本**
+*斜体文本*
+~~删除线文本~~
+
+## 列表
+### 无序列表
+- 项目 1
+- 项目 2
+  - 子项目 2.1
+  - 子项目 2.2
+- 项目 3
+
+### 有序列表
+1. 第一项
+2. 第二项
+   1. 子项 2.1
+   2. 子项 2.2
+3. 第三项
+
+## 代码
+### 行内代码
+使用 \`console.log()\` 打印信息。
+
+### 代码块
+\`\`\`javascript
+// JavaScript 示例
+function greet(name) {
+    return \`Hello, \${name}!\`;
+}
+
+console.log(greet('World'));
+\`\`\`
+
+## 引用
+> 这是引用文本。
+> 引用可以跨越多行。
+
+## 链接和图片
+[打开百度](https://www.baidu.com)
+
+![替代文本](https://via.placeholder.com/150)
+
+## 表格
+| 姓名 | 年龄 | 城市 |
+|------|------|------|
+| 张三 | 25   | 北京 |
+| 李四 | 30   | 上海 |
+| 王五 | 28   | 广州 |`;
+                    break;
+                    
+                case 'matrix':
+                    content = `# 矩阵示例
+
+## 基本矩阵
+一个 2x2 矩阵：
+$$
+\\begin{pmatrix}
+a & b \\\\
+c & d
+\\end{pmatrix}
+$$
+
+## 行列式
+2x2 矩阵行列式：
+$$
+\\begin{vmatrix}
+a & b \\\\
+c & d
+\\end{vmatrix} = ad - bc
+$$
+
+## 线性方程组
+$$
+\\begin{cases}
+a_{11}x_1 + a_{12}x_2 + \\cdots + a_{1n}x_n = b_1 \\\\
+a_{21}x_1 + a_{22}x_2 + \\cdots + a_{2n}x_n = b_2 \\\\
+\\vdots \\\\
+a_{m1}x_1 + a_{m2}x_2 + \\cdots + a_{mn}x_n = b_m
+\\end{cases}
+$$
+
+矩阵形式：
+$$ A\\mathbf{x} = \\mathbf{b} $$
+
+## 特征值与特征向量
+$$ A\\mathbf{v} = \\lambda\\mathbf{v} $$
+
+其中 $\\lambda$ 是特征值，$\\mathbf{v}$ 是对应的特征向量。
+
+## 矩阵运算
+矩阵乘法：
+$$
+\\begin{pmatrix}
+a_{11} & a_{12} \\\\
+a_{21} & a_{22}
+\\end{pmatrix}
+\\begin{pmatrix}
+b_{11} & b_{12} \\\\
+b_{21} & b_{22}
+\\end{pmatrix}
+=
+\\begin{pmatrix}
+a_{11}b_{11} + a_{12}b_{21} & a_{11}b_{12} + a_{12}b_{22} \\\\
+a_{21}b_{11} + a_{22}b_{21} & a_{21}b_{12} + a_{22}b_{22}
+\\end{pmatrix}
+$$`;
+                    break;
+                    
+                case 'empty':
+                    content = '';
+                    break;
+            }
+            
+            markdownInput.value = content;
+            updatePreview();
+            showStatus(`已加载 ${type} 示例`, 'success');
+        }
+        
+        // 监听输入事件
+        markdownInput.addEventListener('input', updatePreview);
+        
+        // 初始化预览
+        updatePreview();
+        
+        // 显示加载完成消息
+        window.addEventListener('load', () => {
+            showStatus('页面加载完成，可以开始编辑 Markdown 和 LaTeX 公式', 'success');
+        });
+    </script>
+</body>
+</html>

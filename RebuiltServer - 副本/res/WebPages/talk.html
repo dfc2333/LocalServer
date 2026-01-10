@@ -1,0 +1,78 @@
+﻿<html>
+    <head>
+        <script>
+            document.addEventListener('DOMContentLoaded',function(){
+                renderMsg()
+                announce()
+            })
+
+            async function renderMsg(){
+                MsgJson=await fetch('/message')
+                MsgJson=await MsgJson.json()
+                console.log(MsgJson)
+                Msgcontainer=document.getElementById("MsgBox")
+                for (e of MsgJson.content){
+                    newmsg=crtMsg(e.sender,e.time,e.content)
+                    Msgcontainer.appendChild(newmsg)
+                }
+                end=document.getElementById('end')
+                end.scrollIntoView({behavious:"smooth"})
+            }
+
+            async function announce(){
+                ann=await fetch('/announce')
+                ann=await ann.json()
+                console.log(ann)
+                annc=document.getElementById('ann')
+                annc.appendChild(crtMsg(ann.sender,ann.time,ann.content))
+            }
+            function crtMsg(sender,time,content){
+                box=document.createElement('div')
+                senderh=document.createElement('h2')
+                timeh=document.createElement('p')
+                contenth=document.createElement('p')
+                senderh.textContent=sender
+                timeh.textContent=time
+                contenth.textContent=content
+                box.appendChild(senderh)
+                box.appendChild(timeh)
+                box.appendChild(contenth)
+                return box
+            }
+            async function sendMsg(){
+                timer=''
+                content=document.getElementById('content').value
+                if (document.cookie){
+                sender=document.cookie}
+                else{return}
+                sth = await fetch('/sendmsg?sender='+sender+'&content='+content)
+                clearmsg()
+                await renderMsg()
+            }
+            function clearmsg(){
+                box=document.getElementById('MsgBox')
+                box.innerHTML=''
+            }
+            async function abc(){
+                clearmsg()
+                await renderMsg()
+            }
+        </script>
+        <style>
+            .scrollable{
+                x:90%;
+                overflow-y: auto;
+                word-wrap: break-word;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Talk</h1>
+        <div id="ann" style="position: fixed;background-color: grey;"></div>
+        <div id="MsgBox" class="scrollable"></div>
+        <input type="text" id="content" placeholder="message...">
+        <button onclick="sendMsg()">send</button>
+        <button onclick="abc()">刷新</button>
+        <div id="end"></div>
+    </body>
+</html>

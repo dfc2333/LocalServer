@@ -1,0 +1,47 @@
+﻿<html>
+    <head>
+        <script>
+            function getUserInput(){
+                return document.getElementById("userinp").value;
+            }
+            function getSysPrompt(){
+                return document.getElementById("sysprompt").value;
+            }
+            async function getHistory(id){
+                return await fetch("/api/history/"+id);
+            }ATTRIBUTE_NODE
+            async function getReply(){
+                return await fetch("/api/get?user="+getUserInput()+"&sys="+getSysPrompt()+"&temp="+document.getElementById("temp").value+"&hisid="+getHistoryid()+"&username="+document.cookie);
+            }
+            async function flashHistory(){
+                his= await getHistory(getHistoryid()).then((his)=>his.json())
+                document.getElementById('history').value = his.content
+            }
+            async function handle(){
+                document.getElementById("history").value+="\nUser:"+getUserInput()
+                AiReply= await getReply()
+                reply_content= await AiReply.json()
+                document.getElementById("history").value+="\nassistant:"+reply_content.choices[0].message.content
+                console.log(reply_content)
+            }
+            function getHistoryid(){
+                return document.getElementById('hisid').value
+            }
+        </script>
+    </head>
+    <body>
+        <h1>AI</h1>
+        <h2>sysprompt</h2>
+        <input type="text" id="sysprompt" value="你是一个ai助手">
+        <h2>history</h2>
+        <textarea name="hstry" id="history" style="width:90%;height:70%" disabled>history here...</textarea>
+        <h2>userinput</h2>
+        <input type="text" id="userinp">
+        <button onclick="handle()">go</button>
+        <h3>temperature</h3>
+        <input type="text" id="temp" value="1.3">
+        <h3>hisid</h3>
+        <input type="text" id="hisid" >
+        <button onclick="flashHistory()">refresh</button>
+    </body>
+</html>
