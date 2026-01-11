@@ -1,5 +1,6 @@
 import requests, os
-from config import headers, passwordEncoded, allowed_ips, loc_dir, net_dir
+from config import headers, passwordEncoded, allowed_ips, loc_dir, net_dir,pages_dir
+from flask import request, send_from_directory
 
 
 def decoder(input_str):
@@ -92,3 +93,20 @@ def list_files():
             html += f'<li><a href="/local/{file}">{file}</a></li>'
     html += "</ul>"
     return html
+
+def VAAvaliable(filename):
+    global serverStatu
+    if not verifier(request.args.get('p'),request.remote_addr) or \
+       not serverStatu or \
+       not (filename.lower().endswith('.mp4') or filename.lower().endswith('.mov')): 
+        return 1
+    else:
+        return 0
+
+def WSAvaliable(service):
+    if not verifier(request.args.get('p'),request.remote_addr) or not serverStatu:
+        return '<script>window.location.replace("https://mx.jrinter.com/faq")</script>'
+    if not os.path.exists(os.path.join(pages_dir,f'{service}')):
+        with open(os.path.join(pages_dir,f'{service}'),'w',encoding='utf-8') as f:
+            f.write(f'<html><head><title>{service} Missing</title></head><body><h1>{service} Not Found</h1><p>Please ensure that the {service} file exists in the WebPages directory.</p></body></html>')
+    return send_from_directory(pages_dir, f'{service}')
