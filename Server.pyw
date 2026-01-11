@@ -16,8 +16,8 @@ services = {'/':                            list_files,
             '/net/bili/<videoName>/<list>': download_bili_file,     #B站视频
             '/net/bilibv/<bv>':             download_bili_video,    #B站指定bv视频
             '/local/<filename>':            serve_file,             #服务器端文件传输
-            '/start':                       start,                  #允许视频传输，其他不受限制（默认不允许，可在config.py中修改）
-            '/exit':                        tmpexit,                #禁止视频传输，其他不受限制
+            '/start':                       start,                  #启动对外服务
+            '/exit':                        tmpexit,                #暂停对外服务
             '/restart':                     restart,                #重启整台电脑
             '/faq':                         Browser,                #打开跳转链接的输入框
             '/dsb':                         dsb,                    #arc定数表（？
@@ -60,6 +60,7 @@ if __name__ == "__main__":
     app.run(
         host="0.0.0.0",
         port=80,
+        threaded=True,
         debug=True
     )
 

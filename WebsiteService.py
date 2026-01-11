@@ -1,27 +1,24 @@
 import os
-from config import down_dir, log_dir, pages_dir,date, res_dir, message_dir
+from config import deepseek_api_key_encoded, log_dir, serverStatu, pages_dir,date, res_dir, message_dir
 from flask import send_from_directory, request
+from tools import decoder, WSAvaliable as avaliable
 import json,requests,datetime
 
-
 def Browser():
-    return send_from_directory(pages_dir, 'browser.html')
-
-
+    return avaliable('browser.html')
 def dsb():
-    return send_from_directory(pages_dir,'dsb.jpeg')
+    return avaliable('dsb.jpeg')
 
 
 def ai():
-    return send_from_directory(pages_dir,'ai.html')
-
+    return avaliable('ai.html')
 def getaiapi():
     user=str(request.args.get('user'))
     hisid=request.args.get('hisid')
     with requests.post(
         url='https://api.deepseek.com/chat/completions',
         headers = {
-        "Authorization": "Bearer <YOUR_DEEPSEEK_API_KEY>",
+        "Authorization": f"Bearer {decoder(deepseek_api_key_encoded)}",
         "Content-Type": "application/json"
         },
         data = json.dumps({
@@ -100,8 +97,8 @@ def announce():
 
 
 def login():
-    return send_from_directory(pages_dir,'login.html')
+    return avaliable('login.html')
 
 
 def talker():
-    return send_from_directory(pages_dir,'talk.html')
+    return avaliable('talk.html')
