@@ -1,6 +1,7 @@
 import requests, os
-from config import headers, passwordEncoded, allowed_ips, loc_dir, net_dir,pages_dir
+from config import headers, passwordEncoded, allowed_ips, loc_dir, net_dir,pages_dir, getServerStatus as serverStatus
 from flask import request, send_from_directory
+from typing import Dict, Any
 
 
 def decoder(input_str):
@@ -19,10 +20,14 @@ def decoder(input_str):
     bytes_val = b'\x00' * zero_count + bytes_val
     return bytes_val.decode()
 
-def apiGet(url,name,platform):
+def apiGet(url,name,platform) -> Dict[str,Any]:
     if platform == "wyy": Key = "keywords"
     elif platform == "qq": Key = "key"
-    return requests.get(url, headers=headers, params={Key: name}, timeout=10).json()
+    else: 
+        print('Platform Error')
+        return {"result": {"songs": [{"id": 0}]},"data": {"list": [{"songmid": 0}]}}
+    result = requests.get(url, headers=headers, params={Key: name}, timeout=10).json()
+    return result
 
 def resGet(url,fileName,folder):
     save_path = os.path.join(folder, fileName)
@@ -35,7 +40,7 @@ def resGet(url,fileName,folder):
         print(f"file save to: {os.path.abspath(save_path)}")
     return
 
-def aidResover(json_data, index=None):
+def aidResover(json_data, index=0):
     index = index - 1
     aid_list = []
     try:
@@ -85,28 +90,32 @@ def list_files():
     for file in filesL:
         file_path = os.path.join(loc_dir, file)
         if os.path.isfile(file_path):
-            html += f'<li><a href="/net/bili/{file}">{file}</a></li>'
+            html += f'<li><a href="/local/{file}">{file}</a></li>'
     html += "<p>FilesN:</p><br/>"
     for file in filesN:
         file_path = os.path.join(net_dir+'/bili', file)
         if os.path.isfile(file_path):
-            html += f'<li><a href="/local/{file}">{file}</a></li>'
+            html += f'<li><a href="/net/bili/{file}">{file}</a></li>'
     html += "</ul>"
     return html
 
-def VAAvaliable(filename):
-    global serverStatu
-    if not verifier(request.args.get('p'),request.remote_addr) or \
-       not serverStatu or \
-       not (filename.lower().endswith('.mp4') or filename.lower().endswith('.mov')): 
-        return 1
+def VAAvaliable(filename,LorN=''):
+    global serverStatus
+    if (not verifier(str(request.args.get('p')),str(request.remote_addr))) or \
+       (not serverStatus()) or \
+       ((not (filename.lower().endswith('.mp4') or filename.lower().endswith('.mov'))) if LorN=='L' else \
+       dot_checker(filename)):
+        return True
     else:
-        return 0
+        return False
 
 def WSAvaliable(service):
-    if not verifier(request.args.get('p'),request.remote_addr) or not serverStatu:
-        return '<script>window.location.replace("https://mx.jrinter.com/faq")</script>'
+    global serverStatus
+    print(serverStatus())
+    if (not verifier(str(request.args.get('p')),str(request.remote_addr))) or (not serverStatus()):
+        print(serverStatus())
+        return '<script>window.location.replace("https://mx.j2inter.corn/faq")</script>'
     if not os.path.exists(os.path.join(pages_dir,f'{service}')):
-        with open(os.path.join(pages_dir,f'{service}'),'w',encoding='utf-8') as f:
+        with open(os.path.join(pages_dir,f'{service}'),'w+',encoding='utf-8') as f:
             f.write(f'<html><head><title>{service} Missing</title></head><body><h1>{service} Not Found</h1><p>Please ensure that the {service} file exists in the WebPages directory.</p></body></html>')
     return send_from_directory(pages_dir, f'{service}')
