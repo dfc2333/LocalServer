@@ -1,5 +1,5 @@
 import datetime
-import os
+import os, threading
 
 global serverStatus
 
@@ -19,17 +19,21 @@ def decoder(input_str):
     bytes_val = b'\x00' * zero_count + bytes_val
     return bytes_val.decode()
 
-serverStatus = False             #服务状态默认设为关，可根据需要自行调整
+class ThreadSafeGlobal:
+    def __init__(self):
+        self._value = 0
+        self._lock = threading.Lock()
+    
+    def __call__(self):
+        with self._lock:
+            return self._value
+    
+    def set_value(self, value):
+        with self._lock:
+            self._value = value
 
-def setServerStatus(statu: bool):
-    global serverStatus
-    print("Setting server status to:", statu)
-    serverStatus = statu
-
-def getServerStatus() -> bool:
-    global serverStatus
-    print("Getting server status:", serverStatus)
-    return serverStatus
+serverStatus = ThreadSafeGlobal()
+serverStatus.set_value(0)        # 0: 默认暂停服务, 1: 默认开启服务
 
 date=str(datetime.datetime.now())[0:-16]
 

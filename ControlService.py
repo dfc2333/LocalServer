@@ -1,19 +1,19 @@
 from flask import request, send_from_directory
 import os
 from tools import verifier
-from config import root, loc_dir, net_dir, change_allowed_ips, date, setServerStatus, getServerStatus
+from config import root, loc_dir, net_dir, change_allowed_ips, date, serverStatus
 
 def start():
     global setServerStatus
     if verifier(str(request.args.get('p')),str(request.remote_addr))!=2: return "Illegal request", 404
-    setServerStatus(True)
-    print(f"serverStatus updated to: {getServerStatus()}")
+    serverStatus.set_value(1)
+    print(f"serverStatus updated to: {serverStatus()}")
     return 'successfullly started'
 
 def tmpexit():
     if verifier(str(request.args.get('p')),str(request.remote_addr))!=2: return "Illegal request", 404
-    global serverStatu
-    serverStatu = False
+    global serverStatus
+    serverStatus.set_value(0)
     return 'successfully exited'
 
 def restart():

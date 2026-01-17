@@ -1,5 +1,5 @@
 import requests, os
-from config import headers, passwordEncoded, allowed_ips, loc_dir, net_dir,pages_dir, getServerStatus as serverStatus
+from config import headers, passwordEncoded, allowed_ips, loc_dir, net_dir,pages_dir, serverStatus
 from flask import request, send_from_directory
 from typing import Dict, Any
 
