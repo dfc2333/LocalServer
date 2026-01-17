@@ -1,5 +1,5 @@
-from flask import Flask, send_from_directory, render_template_string, request
-import urllib3, datetime
+from flask import Flask
+import urllib3
 from tools import list_files
 from VAService import *
 from ControlService import *
@@ -7,7 +7,7 @@ from WebsiteService import *
 
 
 app = Flask(__name__)           #初始化flask服务器
-app.json.ensure_ascii=False     #使中文可在输出中显示
+app.config['JSON_AS_ASCII'] = False
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 services = {'/':                            list_files,

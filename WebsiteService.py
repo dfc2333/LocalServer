@@ -1,5 +1,5 @@
 import os
-from config import deepseek_api_key_encoded, log_dir, serverStatu, pages_dir,date, res_dir, message_dir
+from config import deepseek_api_key_encoded, log_dir, pages_dir, date, res_dir, message_dir
 from flask import send_from_directory, request
 from tools import decoder, WSAvaliable as avaliable
 import json,requests,datetime
@@ -28,7 +28,7 @@ def getaiapi():
         {"role": "user", "content": user}
         ],
         "stream": False,
-        "temperature": float(request.args.get("temp"))
+        "temperature": float(str(request.args.get("temp"))) if request.args.get("temp") else 1.3
         })
         ) as req:
         if hisid:
@@ -68,21 +68,20 @@ def read_message():
     except Exception as e:
         with open(os.path.join(message_dir,f'msg{date}.json'),'w',encoding='utf-8') as file:
             file.write('{"content":[{"sender":"system","time":"none","content":"Newfilecreated'+str(datetime.datetime.now())+'"}]}')
-        return '{"sender":"system","time":"none","content":"Newfilecreated"}'
+        return '{"content":[{"sender":"system","time":"none","content":"Newfilecreated"}]}'
 
 
 def send_msg():
         global date
         sender=request.args.get('sender')
-        print(sender)
         content=request.args.get('content')
-        print(content)
         with open(os.path.join(message_dir,f'msg{date}.json'),'r',encoding='utf-8') as f:
-            file=f.read()
+            file=json.loads(f.read())
         with open(os.path.join(message_dir,f'msg{date}.json'),'w',encoding='utf-8') as f:
-            file=file[0:-2]+(',{"sender":"'+sender+' from '+request.remote_addr+'","time":"'+str(datetime.datetime.now())[-15:-7]+'","content":"'+content+'"}')
-            file=file+']}'
-            f.write(file)
+            for key,value in {'sender':sender,'time':str(datetime.datetime.now())[-15:-7],'content':content}.items():
+                file['content'].append(dict())
+                file['content'][-1][key]=value
+            f.write(json.dumps(file,ensure_ascii=False))
         return 'ok'
 
 

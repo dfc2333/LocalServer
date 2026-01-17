@@ -1,7 +1,7 @@
 import datetime
 import os
 
-global serverStatu
+global serverStatus
 
 def decoder(input_str):
     chars = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
@@ -19,7 +19,18 @@ def decoder(input_str):
     bytes_val = b'\x00' * zero_count + bytes_val
     return bytes_val.decode()
 
-serverStatu = True             #服务状态默认设为关，可根据需要自行调整
+serverStatus = False             #服务状态默认设为关，可根据需要自行调整
+
+def setServerStatus(statu: bool):
+    global serverStatus
+    print("Setting server status to:", statu)
+    serverStatus = statu
+
+def getServerStatus() -> bool:
+    global serverStatus
+    print("Getting server status:", serverStatus)
+    return serverStatus
+
 date=str(datetime.datetime.now())[0:-16]
 
 #Web API Setup
@@ -57,15 +68,16 @@ bili_dir = os.path.join(net_dir,"bili")
 for i in [bili_dir, qq_dir, wyy_dir, message_dir, log_dir, pages_dir, loc_dir, net_dir, down_dir]:
     if not os.path.exists(i):
         os.makedirs(i, exist_ok=True)
-with open(os.path.join(log_dir,'local.log'),'w') as llog:
-    llog.write('service started at {}<br/>\n'.format(str(datetime.datetime.now())))
+with open(os.path.join(log_dir,'local.log'),'w') as locallog:
+    locallog.write('service started at {}<br/>\n'.format(str(datetime.datetime.now())))
 
 #Authentication Setup
 
 passwordEncoded=b'<YOUR_ENCODED_PASSWORD_HERE>'
 
 if not os.path.exists(os.path.join(root, "allowed_ips.txt")):
-    with open(os.path.join(root, "allowed_ips.txt"), "w") as f:
+    with open(os.path.join(root, "allowed_ips.txt"), "w+") as f:
+        print("Creating allowed_ips.txt file.")
         f.write("")
 
 with open(os.path.join(root, "allowed_ips.txt"), "r") as f:
@@ -86,6 +98,7 @@ def change_allowed_ips(mode,ip):
             for line in lines:
                 if line.strip() != ip:
                     f.write(line)
+                    print(line)
             f.truncate()
 
 #other things

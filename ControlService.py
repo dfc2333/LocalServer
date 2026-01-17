@@ -1,23 +1,23 @@
 from flask import request, send_from_directory
 import os
 from tools import verifier
-from config import root, serverStatu, loc_dir, net_dir, change_allowed_ips, date, serverStatu
+from config import root, loc_dir, net_dir, change_allowed_ips, date, setServerStatus, getServerStatus
 
 def start():
-    global serverStatu
-    if verifier(request.args.get('p'),request.remote_addr)!=2: return "Illegal request", 404
-    serverStatu = True
-    print(f"serverStatu updated to: {serverStatu}")
+    global setServerStatus
+    if verifier(str(request.args.get('p')),str(request.remote_addr))!=2: return "Illegal request", 404
+    setServerStatus(True)
+    print(f"serverStatus updated to: {getServerStatus()}")
     return 'successfullly started'
 
 def tmpexit():
-    if verifier(request.args.get('p'),request.remote_addr)!=2: return "Illegal request", 404
+    if verifier(str(request.args.get('p')),str(request.remote_addr))!=2: return "Illegal request", 404
     global serverStatu
     serverStatu = False
     return 'successfully exited'
 
 def restart():
-    if verifier(request.args.get('p'),request.remote_addr)!=2: return 'unauth'
+    if verifier(str(request.args.get('p')),str(request.remote_addr))!=2: return 'unauth'
     os.system('shutdown /r /t 0')
     return 'success'
 
@@ -53,7 +53,7 @@ def end():
     os._exit(0)
 
 def changeip(mode):
-    if verifier(request.args.get('p'))!=2: return "Illegal request", 404
+    if verifier(str(request.args.get('p')))!=2: return "Illegal request", 404
     ip=request.args.get('ip')
     if not ip:
         return "No ip provided", 400
