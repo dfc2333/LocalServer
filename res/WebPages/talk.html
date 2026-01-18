@@ -7,7 +7,7 @@
             })
 
             async function renderMsg(){
-                MsgJson=await fetch('/message')
+                MsgJson=await fetch('/message?targetuser='+document.getElementById('user').value+'&username='+document.cookie)
                 MsgJson=await MsgJson.json()
                 console.log(MsgJson)
                 Msgcontainer=document.getElementById("MsgBox")
@@ -20,6 +20,7 @@
             }
 
             async function announce(){
+                if (document.getElementById('user').value!=""){return}
                 ann=await fetch('/announce')
                 ann=await ann.json()
                 console.log(ann)
@@ -40,12 +41,12 @@
                 return box
             }
             async function sendMsg(){
-                timer=''
                 content=document.getElementById('content').value
+                user=document.getElementById('user').value
                 if (document.cookie){
                 sender=document.cookie}
                 else{return}
-                sth = await fetch('/sendmsg?sender='+sender+'&content='+content)
+                sth = await fetch('/sendmsg?sender='+sender+'&content='+content+'&targetuser='+user)
                 clearmsg()
                 await renderMsg()
             }
@@ -71,6 +72,7 @@
         <div id="ann" style="position: fixed;background-color: grey;"></div>
         <div id="MsgBox" class="scrollable"></div>
         <input type="text" id="content" placeholder="message...">
+        <input type="text" id="user" placeholder="私聊对象，留空以在班级群发送">
         <button onclick="sendMsg()">send</button>
         <button onclick="abc()">刷新</button>
         <div id="end"></div>

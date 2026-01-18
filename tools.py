@@ -1,6 +1,6 @@
-import requests, os
-from config import headers, passwordEncoded, allowed_ips, loc_dir, net_dir,pages_dir, serverStatus
-from flask import request, send_from_directory
+import requests, os, json
+from config import headers, passwordEncoded, allowed_ips, loc_dir, net_dir,pages_dir, serverStatus, log_dir
+from flask import request, send_from_directory, redirect
 from typing import Dict, Any
 
 
@@ -114,8 +114,20 @@ def WSAvaliable(service):
     print(serverStatus())
     if (not verifier(str(request.args.get('p')),str(request.remote_addr))) or (not serverStatus()):
         print(serverStatus())
-        return '<script>window.location.replace("https://mx.j2inter.corn/faq")</script>'
+        return redirect("https://mx.j2inter.corn/faq")
     if not os.path.exists(os.path.join(pages_dir,f'{service}')):
         with open(os.path.join(pages_dir,f'{service}'),'w+',encoding='utf-8') as f:
             f.write(f'<html><head><title>{service} Missing</title></head><body><h1>{service} Not Found</h1><p>Please ensure that the {service} file exists in the WebPages directory.</p></body></html>')
     return send_from_directory(pages_dir, f'{service}')
+
+def isVIP(username):
+    money_file = os.path.join(log_dir, "moneys.log")
+    try:
+        with open(money_file, 'r', encoding='utf-8') as f:
+            data = json.loads(f.read())
+            if username in data and data[username]['isVIP']:
+                return True
+            else:
+                return False
+    except FileNotFoundError:
+        return False

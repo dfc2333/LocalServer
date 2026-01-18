@@ -54,7 +54,7 @@ bili_cookie = decoder(b"<YOUR_ENCODED_COOKIE_HERE>")
 bili_headers = { "User-Agent": defaultUA, "Cookie": bili_cookie }
 #qq_cookie = requests.get("https://intellqc.com/user/getCookie?id="+decoder(b"hmdb4jwHChAP"), headers=headers, verify=False).json()["data"]["cookie"]
 qq_cookie=''
-deepseek_api_key_encoded = b'<YOUR_ENCODED_API_KEY_HERE>'
+deepseek_api_key_encoded = b'CWxPHBDuz4Ya58w7KCDtrDve1B58goFEygh9sdb5EWrRdv2A'
 
 # Directory Setup
 
@@ -104,6 +104,12 @@ def change_allowed_ips(mode,ip):
                     f.write(line)
                     print(line)
             f.truncate()
+
+def load_allowed_ips():
+    global allowed_ips
+    with open(os.path.join(root, "allowed_ips.txt"), "r") as f:
+        allowed_ips = set(line.strip() for line in f.readlines() if line.strip())
+        print("Allowed IPs reloaded:", allowed_ips)
 
 #other things
 pt=''

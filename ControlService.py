@@ -1,7 +1,7 @@
 from flask import request, send_from_directory
-import os
+import os, json
 from tools import verifier
-from config import root, loc_dir, net_dir, change_allowed_ips, date, serverStatus
+from config import root, loc_dir, net_dir, change_allowed_ips, serverStatus, log_dir
 
 def start():
     global setServerStatus
@@ -64,8 +64,27 @@ def changeip(mode):
 
 def view(path):
     with open(os.path.join(root,path),'r',encoding='utf-8') as file:
-        return file.read()
+        result = file.read().split('\n')
+    return '<br/>'.join(result)
     
 def contact(a):
     with open(root+'\\contact.txt','w',encoding='utf-8') as file:
         file.write(a)
+
+def changeVIP(mode):
+    username = str(request.args.get('username'))
+    if not username:
+        return "No username provided", 400
+    isVIP = True if mode == 'add' else False
+    money_file = os.path.join(log_dir, "moneys.log")
+    try:
+        with open(money_file, 'r', encoding='utf-8') as f:
+            data = json.loads(f.read())
+    except FileNotFoundError:
+        data = {}
+    if username not in data:
+        data[username] = {"money": 0, "isVIP": False}
+    data[username]['isVIP'] = isVIP
+    with open(money_file, 'w', encoding='utf-8') as f:
+        f.write(json.dumps(data, ensure_ascii=False))
+    return f"User {username} VIP status changed to {isVIP}, money: {data[username]['money']}"

@@ -4,34 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI对话助手</title>
-    <script>
-        window.MathJax = {
-          tex: {
-            inlineMath: [['$', '$'], ['\\(', '\\)']],
-            displayMath: [['$$', '$$'], ['\\[', '\\]']],
-            processEscapes: true,
-            processEnvironments: true,
-            tags: 'ams'  // 使用AMS编号
-          },
-          options: {
-            skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
-            ignoreHtmlClass: 'tex2jax_ignore',
-            processHtmlClass: 'tex2jax_process'
-          },
-          startup: {
-            ready: () => {
-              MathJax.startup.defaultReady();
-              // 初始渲染
-              if (typeof renderMarkdown === 'function') {
-                renderMarkdown();
-              }
-            }
-          }
-        };
-    </script>
-    <!-- 引入markdown-it和MathJax库 -->
-    <script src="/res/markdown-it.js"></script>
-    <script id="MathJax-script" async="" src="/res/mathjax.js"></script>
     <style>
         * {
             margin: 0;
@@ -82,14 +54,14 @@
         
         .main-content {
             display: grid;
-            grid-template-columns: 1fr;
+            grid-template-columns: 1fr 1fr;
             gap: 25px;
             margin-bottom: 30px;
         }
         
-        @media (min-width: 900px) {
+        @media (max-width: 900px) {
             .main-content {
-                grid-template-columns: 3fr 1fr;
+                grid-template-columns: 1fr;
             }
         }
         
@@ -114,7 +86,6 @@
             border-bottom: 2px solid #edf2f7;
             display: flex;
             align-items: center;
-            justify-content: space-between;
         }
         
         .panel-title i {
@@ -163,77 +134,28 @@
             border: 2px solid #e2e8f0;
             padding: 15px;
             border-radius: 10px;
-            max-height: 60vh;
+            white-space: pre-wrap;
+            max-height: 30vh;
             overflow-y: auto;
-            word-wrap: break-word;
         }
         
         .user-message {
             color: #2b6cb0;
-            margin-top: 1px;
-            padding: 5px;
+            font-weight: 600;
+            margin-top: 15px;
+            padding: 10px;
             background-color: #ebf8ff;
-            border-radius: 3px;
-            border-left: 2px solid #4299e1;
+            border-radius: 8px;
+            border-left: 4px solid #4299e1;
         }
         
         .assistant-message {
             color: #2f855a;
-            margin-top: 1px;
-            padding: 5px;
+            margin-top: 15px;
+            padding: 10px;
             background-color: #f0fff4;
-            border-radius: 3px;
-            border-left: 2px solid #38a169;
-        }
-        
-        .message-header {
-            font-weight: 600;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-        }
-        
-        .message-content {
-            line-height: 1.6;
-        }
-        
-        .message-content p {
-            margin-bottom: 8px;
-        }
-        
-        .message-content ul, .message-content ol {
-            margin-left: 20px;
-            margin-bottom: 8px;
-        }
-        
-        .message-content code {
-            background-color: rgba(0, 0, 0, 0.05);
-            padding: 2px 4px;
-            border-radius: 4px;
-            font-family: 'Courier New', monospace;
-            font-size: 0.9em;
-        }
-        
-        .message-content pre {
-            background-color: rgba(0, 0, 0, 0.05);
-            padding: 12px;
             border-radius: 8px;
-            overflow-x: auto;
-            margin: 10px 0;
-        }
-        
-        .message-content pre code {
-            background-color: transparent;
-            padding: 0;
-            border-radius: 0;
-        }
-        
-        .message-content blockquote {
-            border-left: 4px solid #ddd;
-            padding-left: 15px;
-            margin-left: 0;
-            color: #666;
-            font-style: italic;
+            border-left: 4px solid #38a169;
         }
         
         .controls {
@@ -359,174 +281,13 @@
             text-align: center;
             padding: 20px;
         }
-        
-        /* 设置弹窗样式 */
-        .settings-popup {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            border-radius: 16px;
-            padding: 25px;
-            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.2);
-            z-index: 1000;
-            max-width: 500px;
-            width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
-            display: none;
-        }
-        
-        .settings-popup.active {
-            display: block;
-        }
-        
-        .popup-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: 999;
-            display: none;
-        }
-        
-        .popup-overlay.active {
-            display: block;
-        }
-        
-        .settings-toggle-btn {
-            background: linear-gradient(to right, #4a6ee0, #6a8eff);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 10px;
-            font-weight: 600;
-            cursor: pointer;
-            border: none;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-        
-        .settings-toggle-btn:hover {
-            background: linear-gradient(to right, #3a5ed0, #5a7eff);
-            box-shadow: 0 6px 20px rgba(74, 110, 224, 0.3);
-        }
-        
-        .close-popup {
-            background: #edf2f7;
-            color: #4a5568;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            margin-top: 20px;
-        }
-        
-        .close-popup:hover {
-            background: #e2e8f0;
-        }
-        
-        .popup-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 12px;
-            border-bottom: 2px solid #edf2f7;
-        }
-        
-        .popup-title {
-            font-size: 1.4rem;
-            color: #2d3748;
-            display: flex;
-            align-items: center;
-        }
-        
-        .popup-close-btn {
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            color: #718096;
-            cursor: pointer;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .popup-close-btn:hover {
-            background-color: #f7fafc;
-            color: #4a5568;
-        }
-        
-        /* 设置面板的紧凑版本 */
-        .settings-compact {
-            background: white;
-            border-radius: 16px;
-            padding: 15px;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
-            margin-bottom: 25px;
-        }
-        
-        .settings-summary {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-        
-        .settings-info {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-        
-        .settings-label {
-            font-weight: 600;
-            color: #2d3748;
-        }
-        
-        .settings-value {
-            color: #718096;
-            font-size: 0.9rem;
-        }
-        
-        /* 移动端优化 */
-        @media (max-width: 600px) {
-            .settings-popup {
-                width: 95%;
-                padding: 20px;
-            }
-            
-            .button-group {
-                flex-direction: column;
-            }
-            
-            .button-group button {
-                width: 100%;
-            }
-            
-            .money-display {
-                flex-direction: column;
-                gap: 10px;
-                text-align: center;
-            }
-        }
     </style>
 </head>
 <body>
     <div class="container">
         <header class="header">
             <h1>AI对话助手</h1>
-            <p class="subtitle">与AI进行智能对话，支持Markdown和LaTeX渲染，调整参数设置。</p>
+            <p class="subtitle">与AI进行智能对话，选择不同模型，调整参数，保存对话历史记录。</p>
             <div class="money-display">
                 <span class="money-label">账户余额:</span>
                 <span id="money">加载中...</span>
@@ -535,13 +296,8 @@
         
         <div class="main-content">
             <div class="panel">
-                <div class="panel-title">
-                    <span>对话历史</span>
-                    <button class="settings-toggle-btn" onclick="openSettings()">
-                        设置
-                    </button>
-                </div>
-                <div class="history-area" id="history"></div>
+                <div class="panel-title">对话历史</div>
+                <div class="history-area" id="history">下面是你打开页面之后的历史记录。</div>
                 
                 <div class="divider"></div>
                 
@@ -549,21 +305,13 @@
                     <label for="userinp">输入你的问题</label>
                     <input type="text" id="userinp" placeholder="输入你的问题..." onkeypress="if(event.keyCode==13) handle()">
                 </div>
-                <div class="button-group">
-                    <button class="primary-btn" onclick="handle()">
+                <button class="primary-btn" onclick="handle()">
                         发送消息
-                    </button>
-                </div>
+                </button>
             </div>
-            
-            <!-- 设置弹窗 -->
-            <div class="popup-overlay" id="settingsOverlay" onclick="closeSettings()"></div>
-            <div class="settings-popup" id="settingsPopup">
-                <div class="popup-header">
-                    <div class="popup-title">
-                        <span class="status-indicator"></span> 对话设置
-                    </div>
-                    <button class="popup-close-btn" onclick="closeSettings()">&times;</button>
+            <div class="panel">
+                <div class="panel-title">
+                    <span class="status-indicator"></span> 对话设置
                 </div>
                 
                 <div class="input-group">
@@ -593,67 +341,25 @@
                 
                 <div class="divider"></div>
                 
-                <div class="button-group">
-                    <button class="close-popup" onclick="closeSettings()">
-                        关闭设置
-                    </button>
-                </div>
-            </div>
-            
-            <!-- 设置摘要 -->
-            <div class="settings-compact">
-                <div class="settings-summary">
-                    <div class="settings-info">
-                        <div class="settings-label">当前设置</div>
-                        <div class="settings-value" id="currentModel">DeepSeek 通用模型</div>
-                        <div class="settings-value" id="currentTemp">温度: 1.3</div>
-                    </div>
-                    <button class="settings-toggle-btn" onclick="openSettings()">
-                        修改设置
-                    </button>
-                </div>
-                <div class="tip">
-                    <p>点击"修改设置"调整AI模型、温度参数和系统提示词。</p>
-                </div>
                 <div class="input-group">
-                    <label for="hisid">历史记录名称</label>
                     <input type="text" id="hisid" placeholder="给当前对话取一个名字，以便保存和读取">
                     <p style="margin-top: 8px; color: #718096; font-size: 0.9rem;">填写名称后对话将被保存，AI也会有对话记忆。但是！！思考内容将不保存</p>
                 </div>
-                <button class="secondary-btn" onclick="flashHistory()">
-                        刷新历史
+                
+                <div class="button-group">
+                    <button class="secondary-btn" onclick="flashHistory()">
+                        读取历史记录
                     </button>
+                </div>
             </div>
         </div>
         
         <div class="footer">
-            <p>AI对话助手 v1.0 | 支持Markdown和LaTeX渲染 | 使用前请确保已登录账户</p>
+            <p>AI对话助手 v1.0 | 使用前请确保已登录账户</p>
         </div>
     </div>
     
     <script>
-        // 初始化markdown-it解析器
-        const md = window.markdownit({
-            html: false,
-            linkify: true,
-            typographer: true,
-            breaks: true
-        });
-        
-        // 配置MathJax
-        MathJax = {
-            tex: {
-                inlineMath: [['$', '$'], ['\\(', '\\)']],
-                displayMath: [['$$', '$$'], ['\\[', '\\]']],
-                processEscapes: true,
-                processEnvironments: true
-            },
-            options: {
-                skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
-                ignoreHtmlClass: 'tex-ignore'
-            }
-        };
-        
         // 检查登录状态
         if (document.cookie === '') {
             window.location.replace("/login");
@@ -702,15 +408,6 @@
             }
         }
         
-        // 渲染Markdown和LaTeX内容
-        function renderContent(text) {
-            // 使用markdown-it解析Markdown
-            let html = md.render(text);
-            
-            // 返回HTML，MathJax会自动处理其中的LaTeX公式
-            return html;
-        }
-        
         // 刷新历史记录显示
         async function flashHistory() {
             const historyId = getHistoryid();
@@ -739,25 +436,16 @@
                     let messageElement = document.createElement('div');
                     if (item.role === 'user') {
                         messageElement.className = 'user-message';
-                        messageElement.innerHTML = `
-                            <div class="message-header">用户:</div>
-                            <div class="message-content">${renderContent(item.content)}</div>
-                        `;
+                        messageElement.innerHTML = `<strong>用户:</strong> ${item.content}`;
                     } else {
                         messageElement.className = 'assistant-message';
-                        messageElement.innerHTML = `
-                            <div class="message-header">AI助手:</div>
-                            <div class="message-content">${renderContent(item.content)}</div>
-                        `;
+                        messageElement.innerHTML = `<strong>AI助手:</strong> ${item.content}`;
                     }
                     historyElement.appendChild(messageElement);
                 });
                 
                 // 滚动到底部
                 historyElement.scrollTop = historyElement.scrollHeight;
-                
-                // 重新渲染数学公式
-                MathJax.typesetPromise();
                 
             } catch (error) {
                 console.error("刷新历史记录失败:", error);
@@ -775,27 +463,16 @@
             
             const historyElement = document.getElementById('history');
             
-            // 清除占位符
-            if (historyElement.querySelector('.history-placeholder')) {
-                historyElement.innerHTML = '';
-            }
-
             // 显示用户消息
             const userMessageElement = document.createElement('div');
             userMessageElement.className = 'user-message';
-            userMessageElement.innerHTML = `
-                <div class="message-header">用户:</div>
-                <div class="message-content">${renderContent(userInput)}</div>
-            `;
+            userMessageElement.innerHTML = `<strong>用户:</strong> ${userInput}`;
             historyElement.appendChild(userMessageElement);
             
             // 显示加载状态
             const loadingElement = document.createElement('div');
             loadingElement.className = 'assistant-message';
-            loadingElement.innerHTML = `
-                <div class="message-header">AI助手:</div>
-                <div class="message-content">思考中...</div>
-            `;
+            loadingElement.innerHTML = `<strong>AI助手:</strong> 思考中...`;
             historyElement.appendChild(loadingElement);
             
             // 滚动到底部
@@ -805,20 +482,14 @@
                 // 获取AI回复
                 const aiReply = await getReply();
                 if (!aiReply || !aiReply.ok) {
-                    loadingElement.innerHTML = `
-                        <div class="message-header">AI助手:</div>
-                        <div class="message-content">获取回复失败，请检查网络连接或参数设置</div>
-                    `;
+                    loadingElement.innerHTML = `<strong>AI助手:</strong> 获取回复失败，请检查网络连接或参数设置`;
                     throw new Error("获取AI回复失败");
                 }
                 
                 const replyContent = await aiReply.text();
                 
                 // 更新AI回复
-                loadingElement.innerHTML = `
-                    <div class="message-header">AI助手:</div>
-                    <div class="message-content">${renderContent(replyContent)}</div>
-                `;
+                loadingElement.innerHTML = `<strong>AI助手:</strong> ${replyContent}`;
                 
                 // 更新余额
                 await updateMoney();
@@ -826,15 +497,9 @@
             } catch (error) {
                 console.error("处理请求失败:", error);
                 if (loadingElement.innerHTML.includes("思考中")) {
-                    loadingElement.innerHTML = `
-                        <div class="message-header">AI助手:</div>
-                        <div class="message-content">请求处理失败，请稍后重试</div>
-                    `;
+                    loadingElement.innerHTML = `<strong>AI助手:</strong> 请求处理失败，请稍后重试`;
                 }
             }
-            
-            // 重新渲染数学公式
-            MathJax.typesetPromise();
             
             // 滚动到底部
             historyElement.scrollTop = historyElement.scrollHeight;
@@ -869,35 +534,9 @@
             }
         }
         
-        // 打开设置弹窗
-        function openSettings() {
-            document.getElementById('settingsPopup').classList.add('active');
-            document.getElementById('settingsOverlay').classList.add('active');
-        }
-        
-        // 关闭设置弹窗
-        function closeSettings() {
-            document.getElementById('settingsPopup').classList.remove('active');
-            document.getElementById('settingsOverlay').classList.remove('active');
-            
-            // 更新设置摘要
-            updateSettingsSummary();
-        }
-        
-        // 更新设置摘要
-        function updateSettingsSummary() {
-            const modelSelect = document.getElementById('model');
-            const modelText = modelSelect.options[modelSelect.selectedIndex].text;
-            const tempValue = document.getElementById('temp').value;
-            
-            document.getElementById('currentModel').textContent = modelText;
-            document.getElementById('currentTemp').textContent = `温度: ${tempValue}`;
-        }
-        
-        // 页面加载时初始化
+        // 页面加载时初始化余额
         document.addEventListener('DOMContentLoaded', function() {
             updateMoney();
-            updateSettingsSummary();
             
             // 初始化历史记录区域
             const historyElement = document.getElementById('history');
@@ -906,20 +545,7 @@
             // 添加示例提示
             const userInputElement = document.getElementById('userinp');
             userInputElement.placeholder = "输入你的问题...";
-            
-            // 渲染数学公式
-            MathJax.startup.promise.then(() => {
-    // 现在 MathJax 已完全初始化，可以安全调用其所有方法
-    console.log('MathJax 已就绪，正在排版...');
-    MathJax.typesetPromise();
-}).catch((err) => {
-    console.error('MathJax 初始化失败:', err);
-});
         });
-        
-        // 监听设置变化
-        document.getElementById('model').addEventListener('change', updateSettingsSummary);
-        document.getElementById('temp').addEventListener('change', updateSettingsSummary);
     </script>
 </body>
 </html>

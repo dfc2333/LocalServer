@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown + LaTeX 渲染器</title>
+    <!-- MathJax配置 -->
+    <script>
+        window.MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']],
+            displayMath: [['$$', '$$'], ['\\[', '\\]']],
+            processEscapes: true,
+            processEnvironments: true,
+            tags: 'ams'  // 使用AMS编号
+          },
+          options: {
+            skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            ignoreHtmlClass: 'tex2jax_ignore',
+            processHtmlClass: 'tex2jax_process'
+          },
+          startup: {
+            ready: () => {
+              MathJax.startup.defaultReady();
+              // 初始渲染
+              if (typeof renderMarkdown === 'function') {
+                renderMarkdown();
+              }
+            }
+          }
+        };
+    </script>
+    <!-- 加载MathJax库 -->
+    <script id="MathJax-script" async src="/res/mathjax.js"></script>
+    <!-- 加载markdown-it库 -->
+    <script src="/res/markdown-it.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #4b6cb7 0%, #182848 100%);
+            color: white;
+            padding: 25px 30px;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 2.4rem;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .content {
+            display: flex;
+            flex-wrap: wrap;
+            min-height: 600px;
+        }
+        
+        .editor-section, .preview-section {
+            flex: 1;
+            min-width: 300px;
+            padding: 25px;
+        }
+        
+        .editor-section {
+            border-right: 1px solid #eee;
+            background-color: #f9fafc;
+        }
+        
+        .section-title {
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section-title i {
+            color: #4b6cb7;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 500px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: #4b6cb7;
+            box-shadow: 0 0 0 3px rgba(75, 108, 183, 0.1);
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background-color: #4b6cb7;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #3a5ca9;
+        }
+        
+        .preview-section {
+            overflow-y: auto;
+        }
+        
+        #preview {
+            padding: 10px;
+            min-height: 500px;
+            line-height: 1.7;
+        }
+        
+        #preview h1, #preview h2, #preview h3 {
+            margin-top: 1.5em;
+            margin-bottom: 0.8em;
+            color: #2c3e50;
+        }
+        
+        #preview h1 {
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        
+        #preview p {
+            margin-bottom: 1.2em;
+        }
+        
+        #preview code {
+            background-color: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+        
+        #preview pre {
+            background-color: #f8f8f8;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 15px 0;
+            border-left: 4px solid #4b6cb7;
+        }
+        
+        #preview blockquote {
+            border-left: 4px solid #ddd;
+            padding-left: 15px;
+            margin-left: 0;
+            color: #666;
+            font-style: italic;
+        }
+        
+        #preview table {
+            border-collapse: collapse;
+            margin: 15px 0;
+            width: 100%;
+        }
+        
+        #preview table, #preview th, #preview td {
+            border: 1px solid #ddd;
+            padding: 8px 12px;
+        }
+        
+        #preview th {
+            background-color: #f2f6fc;
+        }
+        
+        .math-block {
+            text-align: center;
+            margin: 20px 0;
+            padding: 10px;
+            overflow-x: auto;
+        }
+        
+        .math-inline {
+            display: inline;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 20px;
+            border-top: 1px solid #eee;
+            color: #666;
+            font-size: 0.9rem;
+            background-color: #f9fafc;
+        }
+        
+        @media (max-width: 768px) {
+            .content {
+                flex-direction: column;
+            }
+            
+            .editor-section {
+                border-right: none;
+                border-bottom: 1px solid #eee;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Markdown + LaTeX 渲染器</h1>
+            <p class="subtitle">使用 markdown-it 解析 Markdown 语法，MathJax 渲染 LaTeX 数学公式。在左侧编辑，右侧实时预览。</p>
+        </header>
+        
+        <div class="content">
+            <div class="editor-section">
+                <h2 class="section-title">
+                    <span>编辑区</span>
+                </h2>
+                <textarea id="markdown-input" placeholder="在此输入Markdown文本和LaTeX数学公式..."></textarea>
+                <div class="controls">
+                <button id="render-btn">渲染 Markdown</button>
+                <button id="clear-btn">清空内容</button>
+            </div>
+        </div>
+        
+        <div class="preview-section">
+            <h2 class="section-title">
+                <span>预览区</span>
+            </h2>
+            <div id="preview">
+                <p style="color: #777; text-align: center; margin-top: 100px;">
+                    内容将在此处渲染...
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>使用 markdown-it 和 MathJax 构建 | 支持标准 Markdown 语法和 LaTeX 数学公式</p>
+    </div>
+</div>
+
+<script>
+    // 初始化 markdown-it
+    const md = window.markdownit({
+        html: true,         // 允许HTML标签
+        linkify: true,      // 自动将URL转换为链接
+        typographer: true,  // 启用一些语言中性的替换和引用美化
+        highlight: function (str, lang) {
+            // 代码高亮函数（简单实现）
+            if (lang && lang !== 'text') {
+                return '<pre class="code-block"><code class="language-' + lang + '">' + 
+                       md.utils.escapeHtml(str) + '</code></pre>';
+            }
+            return '<pre class="code-block"><code>' + md.utils.escapeHtml(str) + '</code></pre>';
+        }
+    });
+    
+    // 获取DOM元素
+    const input = document.getElementById('markdown-input');
+    const preview = document.getElementById('preview');
+    const renderBtn = document.getElementById('render-btn');
+    const clearBtn = document.getElementById('clear-btn');
+    
+    // 渲染函数
+    function renderMarkdown() {
+        const markdownText = input.value;
+        const html = md.render(markdownText);
+        preview.innerHTML = html;
+        
+        // 告诉MathJax重新渲染数学公式
+        if (window.MathJax && window.MathJax.typesetPromise) {
+            window.MathJax.typesetPromise([preview]).catch(err => {
+                console.error('MathJax渲染错误:', err);
+            });
+        }
+    }
+    // 事件监听
+    renderBtn.addEventListener('click', renderMarkdown);
+    
+    clearBtn.addEventListener('click', function() {
+        input.value = '';
+        preview.innerHTML = '<p style="color: #777; text-align: center; margin-top: 100px;">内容将在此处渲染...</p>';
+    });
+    
+    // 初始渲染
+    renderMarkdown();
+    
+    // 实时预览（可选，取消注释以启用）
+    input.addEventListener('input', function() {
+    renderMarkdown();
+    });
+</script>
