@@ -25,7 +25,8 @@ def execute_web_search(query, max_results=5):
         "count": 10
         })
         headers = {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        "Authorization": "Bearer <yourapikey>"
         }
 
         response = requests.request("POST", 'https://api.bocha.cn/v1/ai-search', headers=headers, data=payload)
@@ -53,8 +54,8 @@ def getaiapi():
 
     if not username:
         return "No username provided"
-    if isVIP(username)==False and modelName=='deepseek-reasoner':
-        return "思考的话太烧钱了，需要你赞助一点点啦~"
+    if isVIP(username)==False and (modelName=='deepseek-reasoner' or use_search == True):
+        return "思考和搜索的话太烧钱了，需要你赞助一点点啦~"
     
     # 加载历史记录
     history = []
@@ -158,6 +159,7 @@ def getaiapi():
             # 检查是否有工具调用
             if message.get('tool_calls', None):
                 print("tool calls")
+                total_cost += 0.06
                 # 添加AI的工具调用请求到api_messages（不保存到历史记录）
                 api_messages.append(message)
                 

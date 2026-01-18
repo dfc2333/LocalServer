@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -550,6 +550,7 @@
                     <input type="text" id="userinp" placeholder="输入你的问题..." onkeypress="if(event.keyCode==13) handle()">
                 </div>
                 <div class="button-group">
+                    <button class="primary-btn" onclick="internethandle()">联网询问（仅vip可用）</button>
                     <button class="primary-btn" onclick="handle()">
                         发送消息
                     </button>
@@ -681,7 +682,7 @@
         }
         
         // 获取AI回复
-        async function getReply() {
+        async function getReply(search) {
             const userInput = getUserInput();
             const sysPrompt = getSysPrompt();
             const temp = document.getElementById("temp").value;
@@ -694,7 +695,8 @@
                     "&temp=" + temp + 
                     "&hisid=" + encodeURIComponent(historyId) + 
                     "&username=" + encodeURIComponent(document.cookie) + 
-                    "&model=" + model);
+                    "&model=" + model+
+                    "&search="+search);
                 return response;
             } catch (error) {
                 console.error("获取AI回复失败:", error);
@@ -766,7 +768,7 @@
         }
         
         // 处理用户请求
-        async function handle() {
+        async function handle(isinternet) {
             const userInput = getUserInput();
             if (!userInput) {
                 alert("请输入问题内容");
@@ -803,7 +805,7 @@
             
             try {
                 // 获取AI回复
-                const aiReply = await getReply();
+                const aiReply = await getReply(isinternet);
                 if (!aiReply || !aiReply.ok) {
                     loadingElement.innerHTML = `
                         <div class="message-header">AI助手:</div>
@@ -920,6 +922,10 @@
         // 监听设置变化
         document.getElementById('model').addEventListener('change', updateSettingsSummary);
         document.getElementById('temp').addEventListener('change', updateSettingsSummary);
+        //网络ai：）
+        function internethandle(){
+        handle(true)
+        }
     </script>
 </body>
 </html>

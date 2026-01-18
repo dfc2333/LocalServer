@@ -17,6 +17,6 @@ def base58_encode(bytes):
         encoded = chars[idx] + encoded
     
     return encoded
-data = b'YOUR_DATA_HERE'
+data = b'hello'
 encoded = base58_encode(data)
 print(encoded)

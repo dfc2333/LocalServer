@@ -50,11 +50,11 @@ qq_cookie_set_url = "https://jennergray.com:3301/user/setCookie?data="
 bili_avid_api_url = "https://api.bilibili.com/x/web-interface/wbi/search/all/v2"
 bili_cid_api_url = "https://api.bilibili.com/x/web-interface/view?"
 bili_video_api_url = "https://api.bilibili.com/x/player/wbi/playurl?"
-bili_cookie = decoder(b"<YOUR_ENCODED_COOKIE_HERE>")
+bili_cookie = decoder(b"yourbilicookiehere")
 bili_headers = { "User-Agent": defaultUA, "Cookie": bili_cookie }
 #qq_cookie = requests.get("https://intellqc.com/user/getCookie?id="+decoder(b"hmdb4jwHChAP"), headers=headers, verify=False).json()["data"]["cookie"]
 qq_cookie=''
-deepseek_api_key_encoded = b'CWxPHBDuz4Ya58w7KCDtrDve1B58goFEygh9sdb5EWrRdv2A'
+deepseek_api_key_encoded = b'<yourencodedapikeyhere>'
 
 # Directory Setup
 
@@ -77,7 +77,7 @@ with open(os.path.join(log_dir,'local.log'),'w') as locallog:
 
 #Authentication Setup
 
-passwordEncoded=b'<YOUR_ENCODED_PASSWORD_HERE>'
+passwordEncoded=b'yourpasswordencodedhere'
 
 if not os.path.exists(os.path.join(root, "allowed_ips.txt")):
     with open(os.path.join(root, "allowed_ips.txt"), "w+") as f:
