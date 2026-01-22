@@ -5,7 +5,6 @@ from VAService import *
 from ControlService import *
 from WebsiteService import *
 
-
 app = Flask(__name__)           #初始化flask服务器
 app.config['JSON_AS_ASCII'] = False
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -62,7 +61,7 @@ if __name__ == "__main__":
 
     app.run(
         host="0.0.0.0",
-        port=1145,
+        port=80,
         threaded=True,
         debug=True
     )

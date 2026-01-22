@@ -40,6 +40,7 @@ def execute_web_search(query, max_results=5):
     except Exception as e:
             print(e)
             return f"搜索时出错: {str(e)}"
+    return '搜索暂不可用'
 
 def getaiapi():
     user = str(request.args.get('user'))
@@ -47,10 +48,10 @@ def getaiapi():
     modelName = str(request.args.get('model')) if request.args.get('model') else 'deepseek-chat'
     username = str(request.args.get('username')) if request.args.get('username') else 'guest'
     result=''
-    content=''
+    content1=''
     # 添加工具调用相关参数
     use_search = request.args.get('search', 'false').lower() == 'true'
-    max_search_results = int(request.args.get('max_results', 5))
+    max_search_results = int(request.args.get('max_results', 10))
 
     if not username:
         return "No username provided"
@@ -78,6 +79,7 @@ def getaiapi():
     
     # 准备用于API调用的消息列表（可能包含工具调用中间步骤）
     api_messages = history.copy()
+    new_message=[]
     
     # 定义联网搜索工具
     search_tools = [
@@ -116,7 +118,7 @@ def getaiapi():
     tool_choice = "auto" if use_search else "none"
     
     # 处理工具调用的循环
-    max_iterations = 5  # 防止无限循环
+    max_iterations = 10  # 防止无限循环
     total_cost = 0
     
     for iteration in range(max_iterations):
@@ -128,6 +130,7 @@ def getaiapi():
             "stream": False,
             "temperature": float(str(request.args.get("temp"))) if request.args.get("temp") else 1.3
         }
+        print(api_data)
         
         # 只在有工具时才添加tools和tool_choice参数
         if tools:
@@ -144,11 +147,13 @@ def getaiapi():
             },
             data=json.dumps(api_data)
         ) as req:
-            print("reached loop 2")
+            print(api_data)
+            print("reached loop 2",req.content)
             # 获取AI回复
             response = json.loads(req.content.decode())
+            print('response:',response)
             message = response['choices'][0]['message']
-            print(message)
+            print("message:",message)
             
             # 计算本次调用的费用
             cost = (response.get('usage', {}).get('completion_tokens', 0) / 1000000 * 3 
@@ -162,6 +167,8 @@ def getaiapi():
                 total_cost += 0.06
                 # 添加AI的工具调用请求到api_messages（不保存到历史记录）
                 api_messages.append(message)
+                new_message.append(message)
+                print('message in tool',message)
                 
                 # 处理每个工具调用
                 for tool_call in message['tool_calls']:
@@ -185,20 +192,23 @@ def getaiapi():
                 print("no tool calls")
                 reasoning=''
                 api_messages.append(message)
-                print(api_messages)
-                for i in api_messages:
+                new_message.append(message)
+                print('endmessage:',message)
+                print('apimessages',api_messages)
+                print('new_message:',new_message)
+                for i in new_message:
                     if i.get('role','')=='assistant':
-                        content+=i.get('content','') if i.get('content','') else ''
+                        content1+=i.get('content','')
                         reasoning+=i.get('reasoning_content','') if i.get('reasoning_content','') else ''
 
                 if reasoning:
-                    result = f'<strong>思考：</strong>\n<i>{reasoning}</i>\n<strong>回答：</strong>\n{content}'
+                    result = f'<strong>思考：</strong>\n<i>{reasoning}</i>\n<strong>回答：</strong>\n{content1}'
                 else:
-                    result = content
-                
+                    result = content1
+                print('result:',result)
             # 注意：这里我们只将最终的assistant回复保存到历史记录
             # 不保存工具调用相关的消息
-                history.append({"role": "assistant", "content": content})
+                history.append({"role": "assistant", "content": content1})
             
             # 保存更新后的历史记录（不包含工具调用信息）
                 if hisid and history_file:
@@ -287,7 +297,7 @@ def read_message():
     targetFile=''
     targetuser=str(request.args.get('targetuser'))
     user=str(request.args.get('username'))
-    if not targetuser:
+    if (not targetuser) or (not user) :
         targetFile=f'msg{date}.json'
     else:
         for i in os.scandir(message_dir):

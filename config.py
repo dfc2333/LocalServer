@@ -97,11 +97,9 @@ def change_allowed_ips(mode,ip):
         elif mode == "remove":
             allowed_ips.discard(ip)
             f.seek(0)
-            lines = f.readlines()
-            f.seek(0)
+            lines = allowed_ips.copy()
             for line in lines:
-                if line.strip() != ip:
-                    f.write(line)
+                    f.write(line+'\n')
                     print(line)
             f.truncate()
 
