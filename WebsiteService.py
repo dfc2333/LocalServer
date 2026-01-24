@@ -29,8 +29,8 @@ def execute_web_search(query, max_results=5):
         "Authorization": "Bearer <yourapikey>"
         }
 
-        response = requests.request("POST", 'https://api.bocha.cn/v1/ai-search', headers=headers, data=payload)
-        response = response.json()
+        response = requests.request("POST", 'https://api.bocha.cn/v1/web-search', headers=headers, data=payload)
+        return response.content.decode()
         print(response)
         search_results = response['messages']
         for i in search_results:
