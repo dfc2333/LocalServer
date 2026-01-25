@@ -50,11 +50,20 @@ qq_cookie_set_url = "https://jennergray.com:3301/user/setCookie?data="
 bili_avid_api_url = "https://api.bilibili.com/x/web-interface/wbi/search/all/v2"
 bili_cid_api_url = "https://api.bilibili.com/x/web-interface/view?"
 bili_video_api_url = "https://api.bilibili.com/x/player/wbi/playurl?"
-bili_cookie = decoder(b"yourbilicookiehere")
+try:
+    bili_cookie = decoder(b"yourbilicookiehere")
+except ValueError as e:
+    print("bili cookie not filled")
+    bili_cookie=""
 bili_headers = { "User-Agent": defaultUA, "Cookie": bili_cookie }
 #qq_cookie = requests.get("https://intellqc.com/user/getCookie?id="+decoder(b"hmdb4jwHChAP"), headers=headers, verify=False).json()["data"]["cookie"]
 qq_cookie=''
-deepseek_api_key_encoded = b'<yourencodedapikeyhere>'
+
+try:
+    deepseek_api_key = decoder(b'<yourencodedapikeyhere>')
+except ValueError:
+    print("deepseek api key not set")
+    deepseek_api_key = ""
 
 # Directory Setup
 
@@ -76,8 +85,11 @@ with open(os.path.join(log_dir,'local.log'),'w') as locallog:
     locallog.write('service started at {}<br/>\n'.format(str(datetime.datetime.now())))
 
 #Authentication Setup
-
-passwordEncoded=b'yourpasswordencodedhere'
+try:
+    password=decoder(b'yourpasswordencodedhere')
+except ValueError:
+    print("password not given, you won't be able to /start the server.")
+    password=""
 
 if not os.path.exists(os.path.join(root, "allowed_ips.txt")):
     with open(os.path.join(root, "allowed_ips.txt"), "w+") as f:

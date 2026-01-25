@@ -1,5 +1,5 @@
 import requests, os, json
-from config import headers, passwordEncoded, allowed_ips, loc_dir, net_dir,pages_dir, serverStatus, log_dir
+from config import headers, password, allowed_ips, loc_dir, net_dir,pages_dir, serverStatus, log_dir
 from flask import request, send_from_directory, redirect
 from typing import Dict, Any
 
@@ -66,8 +66,8 @@ def dot_checker(extra_name):
             return True
     return False
 
-def verifier(password='', ip=''):
-    if password == decoder(passwordEncoded):
+def verifier(passwordgiven='', ip=''):
+    if str(passwordgiven) == password:
         return 2
     elif ip in allowed_ips:
         return 1

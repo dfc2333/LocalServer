@@ -1,5 +1,5 @@
 import os
-from config import deepseek_api_key_encoded, log_dir, pages_dir, date, res_dir, message_dir
+from config import deepseek_api_key, log_dir, pages_dir, date, res_dir, message_dir
 from flask import send_from_directory, request, jsonify
 from tools import decoder, WSAvaliable as avaliable, isVIP
 import json,requests,datetime
@@ -142,7 +142,7 @@ def getaiapi():
         with requests.post(
             url='https://api.deepseek.com/chat/completions',
             headers={
-                "Authorization": f"Bearer {decoder(deepseek_api_key_encoded)}",
+                "Authorization": f"Bearer {deepseek_api_key}",
                 "Content-Type": "application/json"
             },
             data=json.dumps(api_data)
