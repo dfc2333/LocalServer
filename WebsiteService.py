@@ -164,7 +164,7 @@ def getaiapi():
             # 检查是否有工具调用
             if message.get('tool_calls', None):
                 print("tool calls")
-                total_cost += 0.06
+                total_cost += 0.036
                 # 添加AI的工具调用请求到api_messages（不保存到历史记录）
                 api_messages.append(message)
                 new_message.append(message)
