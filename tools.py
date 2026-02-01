@@ -20,15 +20,6 @@ def decoder(input_str):
     bytes_val = b'\x00' * zero_count + bytes_val
     return bytes_val.decode()
 
-def apiGet(url,name,platform) -> Dict[str,Any]:
-    if platform == "wyy": Key = "keywords"
-    elif platform == "qq": Key = "key"
-    else: 
-        print('Platform Error')
-        return {"result": {"songs": [{"id": 0}]},"data": {"list": [{"songmid": 0}]}}
-    result = requests.get(url, headers=headers, params={Key: name}, timeout=10).json()
-    return result
-
 def resGet(url,fileName,folder):
     save_path = os.path.join(folder, fileName)
     with requests.get(url, headers=headers, stream=True, timeout=10) as response:

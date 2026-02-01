@@ -10,8 +10,6 @@ app.config['JSON_AS_ASCII'] = False
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 services = {'/':                            list_files,
-            '/net/wyy/<songName>/<list>':   download_wyy_file,      #网易云音乐
-            '/net/qq/<songName>/<list>':    download_qq_file,       #QQ音乐
             '/net/bili/<videoName>/<list>': download_bili_file,     #B站视频
             '/net/bilibv/<bv>':             download_bili_video,    #B站指定bv视频
             '/local/<filename>':            serve_file,             #服务器端文件传输
@@ -29,7 +27,7 @@ services = {'/':                            list_files,
             '/ai':                          ai,                     #AI对话页面
             '/api/get':                     getaiapi,               #获取AI对话接口
             '/api/history/<id>':            gethistory,             #获取AI对话历史，未完成
-            '/res/<path:file>':                  sendres,                #传输资源文件，如js，css等，用于render的html
+            '/res/<path:file>':             sendres,                #传输资源文件，如js，css等，用于render的html
             '/render':                      render,                 #渲染LaTeX和markdown
             '/contact/<path:a>':            contact,                #向电脑发送文本，并存储在根目录下的contacts.txt中
             '/view/<path:path>':            view,                   #浏览根目录下的文件，也可以后面跟路径
