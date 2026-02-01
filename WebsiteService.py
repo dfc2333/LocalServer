@@ -1,16 +1,35 @@
 import os
-from config import deepseek_api_key_encoded, log_dir, pages_dir, date, res_dir, message_dir
+from config import deepseek_api_key, log_dir, pages_dir, date, res_dir, message_dir, headers, userlist, change_userlist
 from flask import send_from_directory, request, jsonify
-from tools import decoder, WSAvaliable as avaliable, isVIP
+from tools import WSAvaliable as avaliable, isVIP, GameAvaliable
 import json,requests,datetime
+from bs4 import BeautifulSoup
 
 def Browser():
     return avaliable('browser.html')
 
+def wjdc():
+    return avaliable('browser.html')
+
+def xkl():
+    return GameAvaliable('xkl.html')
 
 def dsb():
     return avaliable('dsb.jpeg')
 
+def setName():
+    username = str(request.args.get('username'))
+    if not username:
+        return "No username provided", 400
+    ip = request.remote_addr
+    change_userlist('add', ip, username)
+    return "Username set successfully"
+
+def getName():
+    username = userlist.get(str(request.remote_addr),None)
+    if not username:
+        return "No username provided", 400
+    return username
 
 def ai():
     return avaliable('ai.html')
@@ -26,27 +45,48 @@ def execute_web_search(query, max_results=5):
         })
         headers = {
         'Content-Type': 'application/json',
-        "Authorization": "Bearer <yourapikey>"
+        "Authorization": "Bearer sk-56189c76cca24902a05327952197905e"
         }
 
         response = requests.request("POST", 'https://api.bocha.cn/v1/web-search', headers=headers, data=payload)
-        return response.content.decode()
-        print(response)
-        search_results = response['messages']
-        for i in search_results:
-            if i['type']=='answer':
-                return i['content']
+        try:
+            result=json.loads(response.content.decode())
+            searchResult=result['data']['webPages']['value'][:10]
+            print(searchResult)
+        except:
+            return 'error'
+        if searchResult:
+            return str(searchResult)
         return 'nth searched'
     except Exception as e:
             print(e)
             return f"搜索时出错: {str(e)}"
     return '搜索暂不可用'
 
+def open_link(link):
+  try:
+    with requests.get(link,headers=headers) as req:
+        soup=BeautifulSoup(req.content.decode(),'html.parser')
+        body = soup.body
+        if not body:
+            return '网页里没有内容'
+        for tag in body(['script','style']):
+            tag.decompose()
+        text=body.get_text()
+
+        return text
+  except requests.exceptions.InvalidURL:
+      print(link)
+      return "格式不正确，请输入url！"
+  except BaseException as e:
+      print(link, e)
+      return "出现未知错误"+str(e)
+
 def getaiapi():
     user = str(request.args.get('user'))
     hisid = request.args.get('hisid')
     modelName = str(request.args.get('model')) if request.args.get('model') else 'deepseek-chat'
-    username = str(request.args.get('username')) if request.args.get('username') else 'guest'
+    username = userlist.get(str(request.remote_addr),None)
     result=''
     content1=''
     # 添加工具调用相关参数
@@ -107,6 +147,25 @@ def getaiapi():
                 },
                 "strict": False
             }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "open_link",
+                "description": "使用打开链接功能获取链接中网页的body内容以便更好的获取搜索内容，对部分链接不适用，不需要重复尝试打开同一链接。",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "link": {
+                            "type": "string",
+                            "description": "链接URL，要完整，从http或者https开始。"
+                        }
+                    },
+                    "required": ["link"],
+                    "additionalProperties": False
+                },
+                "strict": False
+            }
         }
     ]
     
@@ -118,7 +177,7 @@ def getaiapi():
     tool_choice = "auto" if use_search else "none"
     
     # 处理工具调用的循环
-    max_iterations = 10  # 防止无限循环
+    max_iterations = 20  # 防止无限循环
     total_cost = 0
     
     for iteration in range(max_iterations):
@@ -142,7 +201,7 @@ def getaiapi():
         with requests.post(
             url='https://api.deepseek.com/chat/completions',
             headers={
-                "Authorization": f"Bearer {decoder(deepseek_api_key_encoded)}",
+                "Authorization": f"Bearer {deepseek_api_key}",
                 "Content-Type": "application/json"
             },
             data=json.dumps(api_data)
@@ -164,7 +223,6 @@ def getaiapi():
             # 检查是否有工具调用
             if message.get('tool_calls', None):
                 print("tool calls")
-                total_cost += 0.06
                 # 添加AI的工具调用请求到api_messages（不保存到历史记录）
                 api_messages.append(message)
                 new_message.append(message)
@@ -186,6 +244,22 @@ def getaiapi():
                             "role": "tool",
                             "tool_call_id": tool_call['id'],
                             "content": search_result,
+                        }
+                        )
+                        # 继续循环，让AI处理搜索结果
+                    elif tool_call['function']['name'] == "open_link":
+                        # 解析参数
+                        args = json.loads(tool_call['function']['arguments'])
+                        link = args.get("link", "")
+                        
+                        # 执行dakai
+                        open_result = open_link(link)
+                        print(open_result)
+                        # 将工具调用结果添加到api_messages（不保存到历史记录）
+                        api_messages.append({
+                            "role": "tool",
+                            "tool_call_id": tool_call['id'],
+                            "content": open_result,
                         })  # 继续循环，让AI处理搜索结果
             else:
                 # 如果没有工具调用，处理最终回复
@@ -202,7 +276,7 @@ def getaiapi():
                         reasoning+=i.get('reasoning_content','') if i.get('reasoning_content','') else ''
 
                 if reasoning:
-                    result = f'<strong>思考：</strong>\n<i>{reasoning}</i>\n<strong>回答：</strong>\n{content1}'
+                    result = f'## 思考：\n * {reasoning} * \n ## 回答：\n{content1}'
                 else:
                     result = content1
                 print('result:',result)
@@ -215,50 +289,26 @@ def getaiapi():
                     with open(history_file, 'w', encoding='utf-8') as f:
                         f.write(json.dumps(history, ensure_ascii=False))
             
-                break  # 退出工具调用循环
     
-    # 更新费用记录
-    money_file = os.path.join(log_dir, "moneys.log")
-    try:
-        with open(money_file, 'r', encoding='utf-8') as f:
-            data = json.loads(f.read())
-    except FileNotFoundError:
-        data = {}
     
-    if username not in data:
-        data[username] = {"money": 0, "isVIP": False}
+                # 更新费用记录
+                money_file = os.path.join(log_dir, "moneys.log")
+                try:
+                    with open(money_file, 'r', encoding='utf-8') as f:
+                        data = json.loads(f.read())
+                except FileNotFoundError:
+                    data = {}
     
-    data[username]['money'] += total_cost
+                if username not in data:
+                    data[username] = {"money": 0, "isVIP": False}
     
-    with open(money_file, 'w', encoding='utf-8') as f:
-        f.write(json.dumps(data, ensure_ascii=False))
+                data[username]['money'] += total_cost
+    
+                with open(money_file, 'w', encoding='utf-8') as f:
+                    f.write(json.dumps(data, ensure_ascii=False))
 
-    return result if result else "No response from AI"
-
-
-# 可选：添加独立的搜索函数供其他用途使用
-def web_search_api():
-    """独立的搜索API端点"""
-    query = request.args.get('query', '')
-    max_results = int(request.args.get('max_results', 3))
-    
-    if not query:
-        return jsonify({"error": "No query provided"}), 400
-    
-    try:
-        # 这里实现实际的搜索逻辑
-        # search_results = your_search_api(query, max_results)
-        
-        # 模拟返回
-        search_results = [
-            {"title": f"关于 {query} 的结果1", "snippet": "这是搜索结果1的摘要..."},
-            {"title": f"关于 {query} 的结果2", "snippet": "这是搜索结果2的摘要..."},
-            {"title": f"关于 {query} 的结果3", "snippet": "这是搜索结果3的摘要..."}
-        ]
-        
-        return jsonify({"query": query, "results": search_results[:max_results]})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+                return result if result else "No response from AI"
+    return 'Maximum tool calls reached. AI won\'t return a useful result.'
 
 
 def gethistory(id):
@@ -269,7 +319,7 @@ def gethistory(id):
         return content
 
 def getMoney():
-    username = str(request.args.get('username'))
+    username = userlist.get(str(request.remote_addr),None)
     if not username:
         return "No username provided"
     money_file = os.path.join(log_dir, f"moneys.log")
@@ -295,13 +345,16 @@ def render():
 def read_message():
     global date
     targetFile=''
-    targetuser=str(request.args.get('targetuser'))
-    user=str(request.args.get('username'))
-    if (not targetuser) or (not user) :
+    targetuser=str(request.args.get('targetuser')) if request.args.get('targetuser') else ''
+    user=userlist.get(str(request.remote_addr),None)
+    if not user:
+        return '{"content":"No username provided"}'
+    if (not targetuser in userlist.values()) or not targetuser:
         targetFile=f'msg{date}.json'
     else:
         for i in os.scandir(message_dir):
-            if (targetuser in i.name)and(user in i.name):
+            users=i.name[3:-5].split('_')
+            if (targetuser in users)and(user in users):
                 targetFile=i.name
                 break
         if not targetFile:
@@ -319,7 +372,9 @@ def read_message():
 
 def send_msg():
         global date
-        sender=str(request.args.get('sender'))
+        sender=userlist.get(str(request.remote_addr),'')
+        if not sender:
+            return '{"content":"No username provided"}'
         content=str(request.args.get('content'))
         targetuser=str(request.args.get('targetuser'))
         targetFile=''
@@ -327,7 +382,8 @@ def send_msg():
             targetFile=f'msg{date}.json'
         else:
             for i in os.scandir(message_dir):
-                if (targetuser in i.name)and(sender in i.name):
+                users = i.name[3:-5].split('_')
+                if (targetuser in users)and(sender in users):
                     targetFile=i.name
                     break
             if not targetFile:
@@ -335,9 +391,7 @@ def send_msg():
         with open(os.path.join(message_dir,targetFile),'r',encoding='utf-8') as f:
             file=json.loads(f.read())
         with open(os.path.join(message_dir,targetFile),'w',encoding='utf-8') as f:
-            for key,value in {'sender':sender,'time':str(datetime.datetime.now())[-15:-7],'content':content}.items():
-                file['content'].append(dict())
-                file['content'][-1][key]=value
+            file['content'].append({'sender':sender,'time':str(datetime.datetime.now())[-15:-7],'content':content})
             f.write(json.dumps(file,ensure_ascii=False))
         return 'ok'
 
@@ -358,3 +412,6 @@ def login():
 
 def talker():
     return avaliable('talk.html')
+
+def render():
+    return avaliable('render.html')

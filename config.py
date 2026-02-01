@@ -20,20 +20,63 @@ def decoder(input_str):
     return bytes_val.decode()
 
 class ThreadSafeGlobal:
-    def __init__(self):
-        self._value = 0
+    def __init__(self, value={}):
+        self._value = value
         self._lock = threading.Lock()
     
     def __call__(self):
         with self._lock:
             return self._value
-    
+
+    def __str__(self):
+        with self._lock:
+            return str(self._value)
+
     def set_value(self, value):
         with self._lock:
             self._value = value
 
+    def __add__(self, other:dict):
+        with self._lock:
+            self._value.update(other)
+            return self._value
+    
+    def __getitem__(self, key):
+        with self._lock:
+            return self._value.get(key,None)
+        
+    def __setitem__(self, key, value):
+        with self._lock:
+            self._value[key] = value
+    
+    def pop(self, key, default=None):
+        with self._lock:
+            return self._value.pop(key, default)
+    
+    def copy(self):
+        with self._lock:
+            return self._value.copy()
+    def items(self):
+        with self._lock:
+            return self._value.items()
+    def __contains__(self, key):
+        with self._lock:
+            return key in self._value
+    def keys(self):
+        with self._lock:
+            return self._value.keys()
+    def values(self):
+        with self._lock:
+            return self._value.values()
+    def get(self, key, default=''):
+        with self._lock:
+            return self._value.get(key, default)
+
+
 serverStatus = ThreadSafeGlobal()
 serverStatus.set_value(0)        # 0: 默认暂停服务, 1: 默认开启服务
+userlist = ThreadSafeGlobal()
+userlist.set_value(dict())
 
 date=str(datetime.datetime.now())[0:-16]
 
@@ -50,7 +93,11 @@ qq_cookie_set_url = "https://jennergray.com:3301/user/setCookie?data="
 bili_avid_api_url = "https://api.bilibili.com/x/web-interface/wbi/search/all/v2"
 bili_cid_api_url = "https://api.bilibili.com/x/web-interface/view?"
 bili_video_api_url = "https://api.bilibili.com/x/player/wbi/playurl?"
-bili_cookie = decoder(b"yourbilicookiehere")
+try:
+    bili_cookie = decoder(b"yourbilicookiehere")
+except ValueError as e:
+    print("bili cookie not filled")
+    bili_cookie=""
 bili_headers = { "User-Agent": defaultUA, "Cookie": bili_cookie }
 #qq_cookie = requests.get("https://intellqc.com/user/getCookie?id="+decoder(b"hmdb4jwHChAP"), headers=headers, verify=False).json()["data"]["cookie"]
 qq_cookie=''
@@ -76,38 +123,90 @@ with open(os.path.join(log_dir,'local.log'),'w') as locallog:
     locallog.write('service started at {}<br/>\n'.format(str(datetime.datetime.now())))
 
 #Authentication Setup
+try:
+except ValueError:
+    print("password not given, you won't be able to /start the server.")
+    password=""
 
-passwordEncoded=b'yourpasswordencodedhere'
-
-if not os.path.exists(os.path.join(root, "allowed_ips.txt")):
-    with open(os.path.join(root, "allowed_ips.txt"), "w+") as f:
-        print("Creating allowed_ips.txt file.")
+if not os.path.exists(os.path.join(root, "userlist.txt")):
+    with open(os.path.join(root, "userlist.txt"), "w+") as f:
+        print("Creating userlist.txt file.")
         f.write("")
+        
+with open(os.path.join(root, "userlist.txt"), "r", encoding='utf-8') as f:
+    for line in f.readlines():
+        if line.strip():
+            try:
+                ip, username = line.strip().split(":", 1)
+                userlist[ip] = username
+            except:
+                line.replace(':','')
+                userlist[line.strip()]=''
 
-with open(os.path.join(root, "allowed_ips.txt"), "r") as f:
-    allowed_ips = set(line.strip() for line in f.readlines() if line.strip())
-    print("Allowed IPs loaded:", allowed_ips)
+    print("Userlists loaded:", userlist)
 
-def change_allowed_ips(mode,ip):
-    global allowed_ips
-    with open(os.path.join(root, "allowed_ips.txt"), "a+" if mode=="add" else "w+") as f:
+def change_userlist(mode,ip,username):
+    global userlist
+    with open(os.path.join(root, "userlist.txt"), "w+",encoding='utf-8') as f:
         if mode == "add":
-            allowed_ips.add(ip)
-            f.write(ip + "\n")
-        elif mode == "remove":
-            allowed_ips.discard(ip)
+            userlist[ip] = username
             f.seek(0)
-            lines = allowed_ips.copy()
-            for line in lines:
-                    f.write(line+'\n')
-                    print(line)
+            lines = userlist.copy()
+            for everyip, username in lines.items():
+                f.write(everyip + ":" + username + "\n")
+                print(everyip, username)
+            f.truncate()
+        elif mode == "remove":
+            userlist.pop(ip, None)
+            f.seek(0)
+            lines = userlist.copy()
+            for everyip, username in lines.items():
+                f.write(everyip + ":" + username + "\n")
+                print(everyip, username)
             f.truncate()
 
-def load_allowed_ips():
-    global allowed_ips
-    with open(os.path.join(root, "allowed_ips.txt"), "r") as f:
-        allowed_ips = set(line.strip() for line in f.readlines() if line.strip())
-        print("Allowed IPs reloaded:", allowed_ips)
+def load_userlist():
+    global userlist
+    with open(os.path.join(root, "userlist.txt"), "r", encoding='utf-8') as f:
+        userlist = dict()
+        for line in f.readlines():
+            if line.strip():
+                try:
+                    ip, username = line.strip().split(":", 1)
+                    userlist[ip] = username
+                except:
+                    line.replace(':','')
+                    userlist[line.strip()] = ''
+        print("Userlists reloaded:", userlist)
+
+#Games Forbidden in classes
+forbidden_time=ThreadSafeGlobal({"07:28:00":"08:40:00",
+                                 "08:50:00":"09:30:00",
+                                 "10:00:00":"10:40:00",
+                                 "10:50:00":"11:30:00",
+                                 "11:40:00":"12:20:00",
+                                 "14:30:00":"15:10:00",
+                                 "15:20:00":"16:00:00",
+                                 "16:10:00":"16:50:00",
+                                 "17:00:00":"17:40:00"})
+forbidden_time1=ThreadSafeGlobal({"07:28:00":"08:40:00",
+                                  "08:50:00":"09:30:00",
+                                  "09:40:00":"10:10:00",
+                                  "10:20:00":"11:10:00",
+                                  "11:20:00":"12:00:00",
+                                  "14:30:00":"15:10:00",
+                                  "15:20:00":"16:00:00",
+                                  "16:10:00":"16:50:00",
+                                  "17:00:00":"17:40:00"})        #备用课表
+def is_game_time():
+    now = datetime.datetime.now().time()
+    for start_str, end_str in forbidden_time.items():
+        start_time = datetime.datetime.strptime(start_str, "%H:%M:%S").time()
+        end_time = datetime.datetime.strptime(end_str, "%H:%M:%S").time()
+        if start_time <= now <= end_time:
+            return False
+    return True
+
 
 #other things
 pt=''

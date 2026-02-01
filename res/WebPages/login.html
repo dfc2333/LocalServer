@@ -3,17 +3,15 @@
         <script>
             function talk(){
                 const username = document.getElementById('username').value
-                if (document.cookie){return}
+                fetch('/setname?username='+username)
                 if (username){
-                    document.cookie=username
                     window.location.replace('/talk')
                 }
             }
             function ai(){
                 const username = document.getElementById('username').value
-                if (document.cookie){return}
+                fetch('/setname?username='+username)
                 if (username){
-                    document.cookie=username
                     window.location.replace('/ai')
                 }
             }

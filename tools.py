@@ -1,5 +1,5 @@
 import requests, os, json
-from config import headers, passwordEncoded, allowed_ips, loc_dir, net_dir,pages_dir, serverStatus, log_dir
+from config import headers, password, userlist, loc_dir, net_dir,pages_dir, serverStatus, log_dir, change_userlist, is_game_time
 from flask import request, send_from_directory, redirect
 from typing import Dict, Any
 
@@ -66,10 +66,10 @@ def dot_checker(extra_name):
             return True
     return False
 
-def verifier(password='', ip=''):
-    if password == decoder(passwordEncoded):
+def verifier(passwordgiven='', ip=''):
+    if str(passwordgiven) == password:
         return 2
-    elif ip in allowed_ips:
+    elif ip in userlist.keys():
         return 1
     else:
         print('Unauthorized access attempt from IP: {}'.format(ip))
@@ -131,3 +131,13 @@ def isVIP(username):
                 return False
     except FileNotFoundError:
         return False
+
+def GameAvaliable(service):
+    global serverStatus
+    print(serverStatus())
+    if (not verifier(str(request.args.get('p')),str(request.remote_addr))) or (not serverStatus()) or is_game_time():
+        return redirect("https://mx.j2inter.corn/faq")
+    if not os.path.exists(os.path.join(pages_dir,f'{service}')):
+        with open(os.path.join(pages_dir,f'{service}'),'w+',encoding='utf-8') as f:
+            f.write(f'<html><head><title>{service} Missing</title></head><body><h1>{service} Not Found</h1><p>Please ensure that the {service} file exists in the WebPages directory.</p></body></html>')
+    return send_from_directory(pages_dir, f'{service}')
