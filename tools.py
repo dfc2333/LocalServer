@@ -90,6 +90,13 @@ def list_files():
     html += "</ul>"
     return html
 
+def OnlyAvailable():
+    global serverStatus
+    if (not verifier(str(request.args.get('p')),str(request.remote_addr))) or (not serverStatus()):
+        return True
+    else:
+        return False
+
 def VAAvaliable(filename,LorN=''):
     global serverStatus
     if (not verifier(str(request.args.get('p')),str(request.remote_addr))) or \

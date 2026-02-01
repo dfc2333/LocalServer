@@ -1,12 +1,23 @@
 import os
 from config import deepseek_api_key, log_dir, pages_dir, date, res_dir, message_dir
-from flask import send_from_directory, request, jsonify
-from tools import decoder, WSAvaliable as avaliable, isVIP
+from flask import send_from_directory, request, jsonify, redirect
+from tools import decoder, WSAvaliable as avaliable, isVIP, OnlyAvailable
+from ControlService import run_cmd
 import json,requests,datetime
+
 
 def Browser():
     return avaliable('browser.html')
 
+def music_page():
+    if OnlyAvailable():
+        return '<script>window.location.replace("https://mx.j2inter.corn/faq")</script>'
+    else:
+        try: 
+            requests.get('http://127.0.0.1:1919/started')
+        except:
+            run_cmd("java -jar ./LocalServerKt-1.0.jar")
+        return redirect("http://127.0.0.1:1919/music")
 
 def dsb():
     return avaliable('dsb.jpeg')

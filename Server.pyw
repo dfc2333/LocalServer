@@ -10,6 +10,7 @@ app.config['JSON_AS_ASCII'] = False
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 services = {'/':                            list_files,
+            '/music':                       music_page,             #音乐
             '/net/bili/<videoName>/<list>': download_bili_file,     #B站视频
             '/net/bilibv/<bv>':             download_bili_video,    #B站指定bv视频
             '/local/<filename>':            serve_file,             #服务器端文件传输
