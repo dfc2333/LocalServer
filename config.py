@@ -41,12 +41,6 @@ date=str(datetime.datetime.now())[0:-16]
 
 defaultUA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
 headers = { "User-Agent": defaultUA }
-wyy_songId_api_url = "https://ncm.nekogan.com/search"
-wyy_songUrl_api_url = "https://ncm.nekogan.com/song/url/v1?"
-qq_songId_api_url = "https://jennergray.com:3301/search"
-qq_songUrl_api_url = "https://jennergray.com:3301/song/url?id="
-# qq_songUrl_api_url = "https://intellqc.com/getMusicPlay?songmid="
-qq_cookie_set_url = "https://jennergray.com:3301/user/setCookie?data="
 bili_avid_api_url = "https://api.bilibili.com/x/web-interface/wbi/search/all/v2"
 bili_cid_api_url = "https://api.bilibili.com/x/web-interface/view?"
 bili_video_api_url = "https://api.bilibili.com/x/player/wbi/playurl?"
@@ -56,8 +50,6 @@ except ValueError as e:
     print("bili cookie not filled")
     bili_cookie=""
 bili_headers = { "User-Agent": defaultUA, "Cookie": bili_cookie }
-#qq_cookie = requests.get("https://intellqc.com/user/getCookie?id="+decoder(b"hmdb4jwHChAP"), headers=headers, verify=False).json()["data"]["cookie"]
-qq_cookie=''
 
 try:
     deepseek_api_key = decoder(b'<yourencodedapikeyhere>')
@@ -75,10 +67,8 @@ net_dir = os.path.join(down_dir, "net")
 pages_dir = os.path.join(res_dir, "WebPages")
 log_dir = os.path.join(root, "logs")
 message_dir = os.path.join(root, "messages")
-wyy_dir = os.path.join(net_dir,"wyy")
-qq_dir = os.path.join(net_dir,"qq")
 bili_dir = os.path.join(net_dir,"bili")
-for i in [bili_dir, qq_dir, wyy_dir, message_dir, log_dir, pages_dir, loc_dir, net_dir, down_dir]:
+for i in [bili_dir, message_dir, log_dir, pages_dir, loc_dir, net_dir, down_dir]:
     if not os.path.exists(i):
         os.makedirs(i, exist_ok=True)
 with open(os.path.join(log_dir,'local.log'),'w') as locallog:
