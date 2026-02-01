@@ -29,7 +29,7 @@ services = {'/':                            list_files,
             '/ai':                          ai,                     #AI对话页面
             '/api/get':                     getaiapi,               #获取AI对话接口
             '/api/history/<id>':            gethistory,             #获取AI对话历史，未完成
-            '/res/<path:file>':                  sendres,                #传输资源文件，如js，css等，用于render的html
+            '/res/<path:file>':             sendres,                #传输资源文件，如js，css等，用于render的html
             '/render':                      render,                 #渲染LaTeX和markdown
             '/contact/<path:a>':            contact,                #向电脑发送文本，并存储在根目录下的contacts.txt中
             '/view/<path:path>':            view,                   #浏览根目录下的文件，也可以后面跟路径
@@ -39,14 +39,17 @@ services = {'/':                            list_files,
             '/login':                       login,                  #登录，用于talk，使用cookie存储账户名，并且只能设定一次，修改的功能还没做：）
             '/talk':                        talker,                 #talk主页面
             '/changeip/<mode>':             changeip,               #更改允许访问的IP地址，mode为模式，可选"add"（添加）和"remove"（去除），ip地址通过请求参数ip传递，服务器重启后留存
-            '/loadips':                     load_allowed_ips,       #重新加载允许访问的IP地址列表
+            '/loadips':                     load_userlist,          #重新加载允许访问的IP地址列表
             '/changevip/<mode>':            changeVIP,              #更改用户VIP状态，mode为模式，可选"add"（添加）和"remove"（去除），用户名通过请求参数username传递
-            '/api/getmoney':                getMoney                #获取用户余额，用于AI对话页面显示
-            }
+            '/api/getmoney':                getMoney,               #获取用户余额，用于AI对话页面显示
+            '/setname':                     setName,                #设置用户名，用于talk和ai
+            '/client-lzysso/h5-sso':        wjdc,                   #客户端登录页面
+            '/xkl':                         xkl,                    #dino
+            '/getname':                     getName,                #获取用户名
+}
 
 for path, func in services.items():
     app.route(path)(func)
-
 
 # fun main() {
 if __name__ == "__main__":

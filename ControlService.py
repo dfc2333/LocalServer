@@ -1,7 +1,7 @@
 from flask import request, send_from_directory
 import os, json
 from tools import verifier
-from config import root, loc_dir, net_dir, change_allowed_ips, serverStatus, log_dir
+from config import root, loc_dir, net_dir, change_userlist, serverStatus, log_dir
 
 def start():
     global setServerStatus
@@ -55,12 +55,13 @@ def end():
 def changeip(mode):
     if verifier(str(request.args.get('p')))!=2: return "Illegal request", 404
     ip=request.args.get('ip')
+    username=request.args.get('username')
     if not ip:
         return "No ip provided", 400
     if mode not in ['add','remove']:
         return "Invalid mode", 400
-    change_allowed_ips(mode,ip)
-    return f"Successfully {mode}ed IP: {ip}"
+    change_userlist(mode,ip,username)
+    return f"Successfully {mode}ed IP: {ip} as username: {username}"
 
 def view(path):
     with open(os.path.join(root,path),'r',encoding='utf-8') as file:

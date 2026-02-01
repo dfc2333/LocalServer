@@ -1,44 +1,44 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>ai</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI对话助手</title>
     <script>
-        // 页面加载完成后初始化MathJax
         window.MathJax = {
-            tex: {
-                inlineMath: [['$', '$'], ['\\(', '\\)']],
-                displayMath: [['$$', '$$'], ['\\[', '\\]']]
-            },
-            svg: {
-                fontCache: 'global'
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']],
+            displayMath: [['$$', '$$'], ['\\[', '\\]']],
+            processEscapes: true,
+            processEnvironments: true,
+            tags: 'ams'  // 使用AMS编号
+          },
+          options: {
+            skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            ignoreHtmlClass: 'tex2jax_ignore',
+            processHtmlClass: 'tex2jax_process'
+          },
+          startup: {
+            ready: () => {
+              MathJax.startup.defaultReady();
+              // 初始渲染
+              if (typeof renderMarkdown === 'function') {
+                renderMarkdown();
+              }
             }
+          }
         };
     </script>
-    <script id="MathJax-script" async src="/res/mathjax.js"></script>
+    <!-- 引入markdown-it和MathJax库 -->
     <script src="/res/markdown-it.js"></script>
+    <script id="MathJax-script" async="" src="/res/mathjax.js"></script>
     <link rel="stylesheet" href="/res/ai.css">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 20px auto;
-            padding: 0 20px;
-            line-height: 1.6;
-        }
-        .math-container {
-            margin: 20px 0;
-            padding: 15px;
-            background-color: #f9f9f9;
-            border-radius: 5px;
-        }
-    </style>
 </head>
 <body>
     <div class="container">
         <header class="header">
             <h1>AI对话助手</h1>
-            <p class="subtitle">与AI进行智能对话，支持Markdown和LaTeX渲染，调整参数设置。测试\(\frac{a}{b}\)</p>
+            <p class="subtitle">与AI进行智能对话，支持Markdown和LaTeX渲染，调整参数设置。</p>
             <div class="money-display">
                 <span class="money-label">账户余额:</span>
                 <span id="money">加载中...</span>
@@ -143,6 +143,7 @@
             <p>AI对话助手 v1.0 | 支持Markdown和LaTeX渲染 | 使用前请确保已登录账户</p>
         </div>
     </div>
+    
     <script>
         // 初始化markdown-it解析器
         const md = window.markdownit({
@@ -151,6 +152,21 @@
             typographer: true,
             breaks: true
         });
+        
+        // 配置MathJax
+        MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true,
+                processEnvironments: true
+            },
+            options: {
+                skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+                ignoreHtmlClass: 'tex-ignore'
+            }
+        };
+
         // 检查用户名
         async function getName() {
             try {
@@ -206,22 +222,12 @@
                 return response;
             } catch (error) {
                 console.error("获取AI回复失败:", error);
-                return '';
+                return null;
             }
         }
         
         // 渲染Markdown和LaTeX内容
         function renderContent(text) {
-            function escapeBackslashes(str) {
-  return str.replace(/(```[\s\S]*?```|\\\\)|\\/g, function(match, codeBlock) {
-    // 如果匹配到的是整个代码块，原样返回
-    if (codeBlock) return match;
-    // 否则是代码块外的单个反斜线，替换为双反斜线
-    return '\\\\';
-  });
-}
-            text = escapeBackslashes(text);
-            console.log(text)
             // 使用markdown-it解析Markdown
             let html = md.render(text);
             
