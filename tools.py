@@ -1,5 +1,9 @@
 import requests, os, json
+<<<<<<< HEAD
 from config import headers, password, userlist, loc_dir, net_dir,pages_dir, serverStatus, log_dir, change_userlist, is_game_time
+=======
+from config import headers, password, allowed_ips, loc_dir, net_dir,pages_dir, serverStatus, log_dir
+>>>>>>> main
 from flask import request, send_from_directory, redirect
 from typing import Dict, Any
 
@@ -19,15 +23,6 @@ def decoder(input_str):
     zero_count = len(input_str) - len(input_str.lstrip('1'))
     bytes_val = b'\x00' * zero_count + bytes_val
     return bytes_val.decode()
-
-def apiGet(url,name,platform) -> Dict[str,Any]:
-    if platform == "wyy": Key = "keywords"
-    elif platform == "qq": Key = "key"
-    else: 
-        print('Platform Error')
-        return {"result": {"songs": [{"id": 0}]},"data": {"list": [{"songmid": 0}]}}
-    result = requests.get(url, headers=headers, params={Key: name}, timeout=10).json()
-    return result
 
 def resGet(url,fileName,folder):
     save_path = os.path.join(folder, fileName)
@@ -98,6 +93,13 @@ def list_files():
             html += f'<li><a href="/net/bili/{file}">{file}</a></li>'
     html += "</ul>"
     return html
+
+def OnlyAvailable():
+    global serverStatus
+    if (not verifier(str(request.args.get('p')),str(request.remote_addr))) or (not serverStatus()):
+        return True
+    else:
+        return False
 
 def VAAvaliable(filename,LorN=''):
     global serverStatus
