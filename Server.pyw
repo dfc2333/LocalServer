@@ -10,8 +10,7 @@ app.config['JSON_AS_ASCII'] = False
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 services = {'/':                            list_files,
-            '/net/wyy/<songName>/<list>':   download_wyy_file,      #网易云音乐
-            '/net/qq/<songName>/<list>':    download_qq_file,       #QQ音乐
+            '/music':                       music_page,             #音乐
             '/net/bili/<videoName>/<list>': download_bili_file,     #B站视频
             '/net/bilibv/<bv>':             download_bili_video,    #B站指定bv视频
             '/local/<filename>':            serve_file,             #服务器端文件传输
@@ -64,7 +63,7 @@ if __name__ == "__main__":
 
     app.run(
         host="0.0.0.0",
-        port=80,
+        port=1145,
         threaded=True,
         debug=True
     )

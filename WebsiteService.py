@@ -1,18 +1,38 @@
 import os
+<<<<<<< HEAD
 from config import deepseek_api_key, log_dir, pages_dir, date, res_dir, message_dir, headers, userlist, change_userlist
 from flask import send_from_directory, request, jsonify
 from tools import WSAvaliable as avaliable, isVIP, GameAvaliable
+=======
+from config import deepseek_api_key, log_dir, pages_dir, date, res_dir, message_dir
+from flask import send_from_directory, request, jsonify, redirect
+from tools import decoder, WSAvaliable as avaliable, isVIP, OnlyAvailable
+from ControlService import run_cmd
+>>>>>>> main
 import json,requests,datetime
 from bs4 import BeautifulSoup
+
 
 def Browser():
     return avaliable('browser.html')
 
+<<<<<<< HEAD
 def wjdc():
     return avaliable('browser.html')
 
 def xkl():
     return GameAvaliable('xkl.html')
+=======
+def music_page():
+    if OnlyAvailable():
+        return '<script>window.location.replace("https://mx.j2inter.corn/faq")</script>'
+    else:
+        try: 
+            requests.get('http://127.0.0.1:1919/started')
+        except:
+            run_cmd("java -jar ./LocalServerKt-1.0.jar")
+        return redirect("http://127.0.0.1:1919/music")
+>>>>>>> main
 
 def dsb():
     return avaliable('dsb.jpeg')
@@ -223,6 +243,10 @@ def getaiapi():
             # 检查是否有工具调用
             if message.get('tool_calls', None):
                 print("tool calls")
+<<<<<<< HEAD
+=======
+                total_cost += 0.036
+>>>>>>> main
                 # 添加AI的工具调用请求到api_messages（不保存到历史记录）
                 api_messages.append(message)
                 new_message.append(message)
