@@ -71,6 +71,10 @@ class ThreadSafeGlobal:
     def get(self, key, default=''):
         with self._lock:
             return self._value.get(key, default)
+    def delete(self, key):
+        with self._lock:
+            if key in self._value:
+                del self._value[key]
 
 
 serverStatus = ThreadSafeGlobal()
@@ -119,10 +123,7 @@ with open(os.path.join(log_dir,'local.log'),'w') as locallog:
 
 #Authentication Setup
 try:
-<<<<<<< HEAD
-=======
     password=decoder(b'yourpasswordencodedhere')
->>>>>>> main
 except ValueError:
     print("password not given, you won't be able to /start the server.")
     password=""
@@ -143,26 +144,6 @@ with open(os.path.join(root, "userlist.txt"), "r", encoding='utf-8') as f:
                 userlist[line.strip()]=''
 
     print("Userlists loaded:", userlist)
-
-def change_userlist(mode,ip,username):
-    global userlist
-    with open(os.path.join(root, "userlist.txt"), "w+",encoding='utf-8') as f:
-        if mode == "add":
-            userlist[ip] = username
-            f.seek(0)
-            lines = userlist.copy()
-            for everyip, username in lines.items():
-                f.write(everyip + ":" + username + "\n")
-                print(everyip, username)
-            f.truncate()
-        elif mode == "remove":
-            userlist.pop(ip, None)
-            f.seek(0)
-            lines = userlist.copy()
-            for everyip, username in lines.items():
-                f.write(everyip + ":" + username + "\n")
-                print(everyip, username)
-            f.truncate()
 
 def load_userlist():
     global userlist
@@ -197,15 +178,18 @@ forbidden_time1=ThreadSafeGlobal({"07:28:00":"08:40:00",
                                   "15:20:00":"16:00:00",
                                   "16:10:00":"16:50:00",
                                   "17:00:00":"17:40:00"})        #备用课表
-def is_game_time():
+def is_not_game_time():
     now = datetime.datetime.now().time()
     for start_str, end_str in forbidden_time.items():
+        print(start_str, end_str)
         start_time = datetime.datetime.strptime(start_str, "%H:%M:%S").time()
         end_time = datetime.datetime.strptime(end_str, "%H:%M:%S").time()
+        print(start_time, end_time)
         if start_time <= now <= end_time:
-            return False
-    return True
-
+            print("in forbidden time:", now, start_time, end_time)
+            return True
+    print("not in forbidden time:", now)
+    return False
 
 #other things
 pt=''

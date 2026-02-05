@@ -1,6 +1,7 @@
 from flask import Flask
 import urllib3
-from tools import list_files
+from tools import *
+from config import *
 from VAService import *
 from ControlService import *
 from WebsiteService import *
@@ -29,7 +30,7 @@ services = {'/':                            list_files,
             '/api/get':                     getaiapi,               #获取AI对话接口
             '/api/history/<id>':            gethistory,             #获取AI对话历史，未完成
             '/res/<path:file>':             sendres,                #传输资源文件，如js，css等，用于render的html
-            '/render':                      render,                 #渲染LaTeX和markdown
+            '/erm':                         render,                 #渲染LaTeX和markdown
             '/contact/<path:a>':            contact,                #向电脑发送文本，并存储在根目录下的contacts.txt中
             '/view/<path:path>':            view,                   #浏览根目录下的文件，也可以后面跟路径
             '/message':                     read_message,           #返回消息列表，用于talk
@@ -42,13 +43,21 @@ services = {'/':                            list_files,
             '/changevip/<mode>':            changeVIP,              #更改用户VIP状态，mode为模式，可选"add"（添加）和"remove"（去除），用户名通过请求参数username传递
             '/api/getmoney':                getMoney,               #获取用户余额，用于AI对话页面显示
             '/setname':                     setName,                #设置用户名，用于talk和ai
-            '/client-lzysso/h5-sso':        wjdc,                   #客户端登录页面
+            '/client-lzysso/h5-sso':        Browser,                   #客户端登录页面
             '/xkl':                         xkl,                    #dino
             '/getname':                     getName,                #获取用户名
+            '/getreadme':                   getReadme,              #获取readme文件内容
+            '/savereadme':                  saveReadme,             #保存readme文件内容
 }
 
 for path, func in services.items():
     app.route(path)(func)
+
+@app.route('/bancjb')
+def bancjb():
+    userlist.delete('192.168.40.37')
+    return "成功封禁cjb"
+
 
 # fun main() {
 if __name__ == "__main__":
@@ -63,7 +72,7 @@ if __name__ == "__main__":
 
     app.run(
         host="0.0.0.0",
-        port=1145,
+        port=80,
         threaded=True,
         debug=True
     )

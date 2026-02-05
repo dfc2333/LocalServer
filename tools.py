@@ -1,9 +1,5 @@
 import requests, os, json
-<<<<<<< HEAD
-from config import headers, password, userlist, loc_dir, net_dir,pages_dir, serverStatus, log_dir, change_userlist, is_game_time
-=======
-from config import headers, password, allowed_ips, loc_dir, net_dir,pages_dir, serverStatus, log_dir
->>>>>>> main
+from config import *
 from flask import request, send_from_directory, redirect
 from typing import Dict, Any
 
@@ -137,9 +133,30 @@ def isVIP(username):
 def GameAvaliable(service):
     global serverStatus
     print(serverStatus())
-    if (not verifier(str(request.args.get('p')),str(request.remote_addr))) or (not serverStatus()) or is_game_time():
+    if (not verifier(str(request.args.get('p')),str(request.remote_addr))) or (not serverStatus()) or is_not_game_time():
         return redirect("https://mx.j2inter.corn/faq")
     if not os.path.exists(os.path.join(pages_dir,f'{service}')):
         with open(os.path.join(pages_dir,f'{service}'),'w+',encoding='utf-8') as f:
             f.write(f'<html><head><title>{service} Missing</title></head><body><h1>{service} Not Found</h1><p>Please ensure that the {service} file exists in the WebPages directory.</p></body></html>')
     return send_from_directory(pages_dir, f'{service}')
+
+def change_userlist(mode,ip,username):
+    if verifier(str(request.args.get('p')))!=2: return "Illegal request", 404
+    global userlist
+    with open(os.path.join(root, "userlist.txt"), "w+",encoding='utf-8') as f:
+        if mode == "add":
+            userlist[ip] = username
+            f.seek(0)
+            lines = userlist.copy()
+            for everyip, username in lines.items():
+                f.write(everyip + ":" + username + "\n")
+                print(everyip, username)
+            f.truncate()
+        elif mode == "remove":
+            userlist.pop(ip, None)
+            f.seek(0)
+            lines = userlist.copy()
+            for everyip, username in lines.items():
+                f.write(everyip + ":" + username + "\n")
+                print(everyip, username)
+            f.truncate()

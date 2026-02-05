@@ -267,7 +267,7 @@
             position: fixed;
             bottom: 20px;
             right: 20px;
-            width: 300px;
+            width: 90%;
             background: rgba(255, 255, 255, 0.95);
             border-radius: 10px;
             padding: 15px;
@@ -547,6 +547,21 @@
         <audio controls class="audio-player" id="audioPlayer">
             您的浏览器不支持音频元素
         </audio>
+        <div id="customControls">
+            <span>音量：</span>
+            <input type="range" id="volumeSlider" min="0" max="1" step="0.05" value="0.1" 
+            oninput="document.getElementById('audioPlayer').volume = this.value;" style="width: 70%;"/>
+        </div>
+
+        <script>
+        // 3. 初始化：页面加载后设置音频音量与滑块同步
+        window.onload = function() {
+            const player = document.getElementById('audioPlayer');
+            const slider = document.getElementById('volumeSlider');
+            // 确保初始音量同步
+            player.volume = slider.value;
+        };
+        </script>
         <div class="loading-text" id="loadingText"></div>
     </div>
 
@@ -567,7 +582,7 @@
                     </div>
                     <div class="setting-item">
                         <span class="setting-label">搜索个数</span>
-                        <input type="number" class="number-input" id="limit" min="1" max="100" value="30">
+                        <input type="number" class="number-input" id="limit" min="1" max="20" value="10">
                     </div>
                 </div>
 
@@ -616,7 +631,7 @@
         };
 
         // 代理服务器地址
-        const PROXY_SERVER = 'http://127.0.0.1:1919';
+        const PROXY_SERVER = 'http://192.168.40.114:1919';
 
         // 音乐缓存 - 存储歌曲的Blob对象
         const musicCache = new Map();
@@ -997,6 +1012,7 @@
         // 点击模态框外部关闭
         document.getElementById('settingsModal').addEventListener('click', function(e) {
             if (e.target === this) {
+                saveSettings();
                 closeSettings();
             }
         });
