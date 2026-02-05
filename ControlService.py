@@ -1,7 +1,7 @@
 from flask import request, send_from_directory
 import os, json
-from tools import verifier
-from config import root, loc_dir, net_dir, change_userlist, serverStatus, log_dir
+from tools import verifier, change_userlist
+from config import root, loc_dir, net_dir, serverStatus, log_dir
 
 def start():
     global setServerStatus
@@ -73,6 +73,7 @@ def contact(a):
         file.write(a)
 
 def changeVIP(mode):
+    if verifier(str(request.args.get('p')))!=2: return "Illegal request", 404
     username = str(request.args.get('username'))
     if not username:
         return "No username provided", 400

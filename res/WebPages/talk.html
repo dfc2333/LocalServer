@@ -7,7 +7,7 @@
             })
 
             async function renderMsg(){
-                MsgJson=await fetch('/message?targetuser='+document.getElementById('user').value+'&username='+document.cookie)
+                MsgJson=await fetch('/message?targetuser='+document.getElementById('user').value)
                 MsgJson=await MsgJson.json()
                 console.log(MsgJson)
                 Msgcontainer=document.getElementById("MsgBox")
@@ -43,10 +43,8 @@
             async function sendMsg(){
                 content=document.getElementById('content').value
                 user=document.getElementById('user').value
-                if (document.cookie){
-                sender=document.cookie}
-                else{return}
-                sth = await fetch('/sendmsg?sender='+sender+'&content='+content+'&targetuser='+user)
+                sth = await fetch('/sendmsg?content='+encodeURIComponent(content)+'&targetuser='+encodeURIComponent(user))
+                console.log(await sth.text())
                 clearmsg()
                 await renderMsg()
             }

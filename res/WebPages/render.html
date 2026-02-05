@@ -256,10 +256,10 @@
                 <h2 class="section-title">
                     <span>编辑区</span>
                 </h2>
-                <textarea id="markdown-input" placeholder="在此输入Markdown文本和LaTeX数学公式..."></textarea>
+                <textarea id="markdown-input" placeholder="在此输入Markdown文本和LaTeX数学公式..." ></textarea>
                 <div class="controls">
                 <button id="render-btn">渲染 Markdown</button>
-                <button id="clear-btn">清空内容</button>
+                <button id="clear-btn">保存</button>
             </div>
         </div>
         
@@ -319,15 +319,28 @@
     renderBtn.addEventListener('click', renderMarkdown);
     
     clearBtn.addEventListener('click', function() {
-        input.value = '';
-        preview.innerHTML = '<p style="color: #777; text-align: center; margin-top: 100px;">内容将在此处渲染...</p>';
+        const content = input.value;
+        fetch('/savereadme?content=' + encodeURIComponent(content))
+        .then(response => response.text())
+        .then(data => {
+            alert(data);
+        })
+        .catch(error => {
+            console.error('保存错误:', error);
+        });
     });
     
     // 初始渲染
-    renderMarkdown();
+
+    fetch('/getreadme').then(response => response.text()).then(data => {
+        input.value = data;
+        renderMarkdown();
+    });
     
     // 实时预览（可选，取消注释以启用）
     input.addEventListener('input', function() {
     renderMarkdown();
     });
 </script>
+</body>
+</html>

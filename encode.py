@@ -17,6 +17,8 @@ def base58_encode(bytes):
         encoded = chars[idx] + encoded
     
     return encoded
-data = b'hello'
-encoded = base58_encode(data)
-print(encoded)
+
+if __name__ == "__main__":
+    data = b'dfcfrhnb'
+    encoded = base58_encode(data)
+    print(encoded)

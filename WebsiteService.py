@@ -1,14 +1,9 @@
 import os
-<<<<<<< HEAD
-from config import deepseek_api_key, log_dir, pages_dir, date, res_dir, message_dir, headers, userlist, change_userlist
-from flask import send_from_directory, request, jsonify
-from tools import WSAvaliable as avaliable, isVIP, GameAvaliable
-=======
-from config import deepseek_api_key, log_dir, pages_dir, date, res_dir, message_dir
+from config import *
 from flask import send_from_directory, request, jsonify, redirect
-from tools import decoder, WSAvaliable as avaliable, isVIP, OnlyAvailable
+from tools import decoder, WSAvaliable as avaliable, isVIP, OnlyAvailable,GameAvaliable, userlist, change_userlist
 from ControlService import run_cmd
->>>>>>> main
+from encode import base58_encode
 import json,requests,datetime
 from bs4 import BeautifulSoup
 
@@ -16,31 +11,26 @@ from bs4 import BeautifulSoup
 def Browser():
     return avaliable('browser.html')
 
-<<<<<<< HEAD
-def wjdc():
-    return avaliable('browser.html')
-
 def xkl():
     return GameAvaliable('xkl.html')
-=======
+
 def music_page():
     if OnlyAvailable():
-        return '<script>window.location.replace("https://mx.j2inter.corn/faq")</script>'
+        return redirect('https://mx.j2inter.corn')
     else:
         try: 
-            requests.get('http://127.0.0.1:1919/started')
+            requests.get('http://192.168.40.114:1919/started')
         except:
             run_cmd("java -jar ./LocalServerKt-1.0.jar")
-        return redirect("http://127.0.0.1:1919/music")
->>>>>>> main
+        return redirect("http://192.168.40.114:1919/music")
 
 def dsb():
     return avaliable('dsb.jpeg')
 
 def setName():
     username = str(request.args.get('username'))
-    if not username:
-        return "No username provided", 400
+    if (not username) or (username.strip() in userlist.values()):
+        return "sth went wrong", 400
     ip = request.remote_addr
     change_userlist('add', ip, username)
     return "Username set successfully"
@@ -243,10 +233,6 @@ def getaiapi():
             # 检查是否有工具调用
             if message.get('tool_calls', None):
                 print("tool calls")
-<<<<<<< HEAD
-=======
-                total_cost += 0.036
->>>>>>> main
                 # 添加AI的工具调用请求到api_messages（不保存到历史记录）
                 api_messages.append(message)
                 new_message.append(message)
@@ -362,10 +348,6 @@ def sendres(file):
     print(os.path.join(res_dir, os.path.dirname(file)), os.path.basename(file))
     return send_from_directory(os.path.join(res_dir, os.path.dirname(file)), os.path.basename(file))
 
-
-def render():
-    return send_from_directory(pages_dir,'render.html')
-
 def read_message():
     global date
     targetFile=''
@@ -386,11 +368,11 @@ def read_message():
 
     try:
         with open(os.path.join(message_dir,targetFile),'r',encoding='utf-8') as file:
-            return file.read()
+            return decoder(bytes(file.read(),encoding='utf-8'))
     except Exception as e:
         with open(os.path.join(message_dir,targetFile),'w',encoding='utf-8') as file:
             time = str(datetime.datetime.now())
-            file.write('{"content":[{"sender":"system","time":"none","content":"Newfilecreated'+time+'"}]}')
+            file.write(base58_encode(bytes('{"content":[{"sender":"system","time":"none","content":"Newfilecreated'+time+'"}]}',encoding='utf-8')))
         return '{"content":[{"sender":"system","time":"none","content":"Newfilecreated'+time+'"}]}'
 
 
@@ -413,10 +395,10 @@ def send_msg():
             if not targetFile:
                 targetFile=f'msg{sender+"_"+targetuser}.json'
         with open(os.path.join(message_dir,targetFile),'r',encoding='utf-8') as f:
-            file=json.loads(f.read())
+            file=json.loads(decoder(bytes(f.read(),encoding='utf-8')))
         with open(os.path.join(message_dir,targetFile),'w',encoding='utf-8') as f:
             file['content'].append({'sender':sender,'time':str(datetime.datetime.now())[-15:-7],'content':content})
-            f.write(json.dumps(file,ensure_ascii=False))
+            f.write(base58_encode(bytes(json.dumps(file,ensure_ascii=False),encoding='utf-8')))
         return 'ok'
 
 
@@ -439,3 +421,15 @@ def talker():
 
 def render():
     return avaliable('render.html')
+
+def getReadme():
+    with open(os.path.join(root,'README.md'),'r',encoding='utf-8') as f:
+        return f.read()
+    
+def saveReadme():
+    request_content = request.args.get('content',None)
+    if not request_content:
+        return "No content provided", 400
+    with open(os.path.join(root,'README.md'),'w',encoding='utf-8') as f:
+        f.write(request_content)
+    return "Saved successfully"

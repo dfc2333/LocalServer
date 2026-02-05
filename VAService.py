@@ -6,7 +6,7 @@ from config import *
 def serve_file(filename):
     global pt
     if VAAvaliable(filename,'L'):
-        return '<script>window.location.replace("https://mx.j2inter.corn/faq")</script>'
+        return redirect('https://mx.j2inter.corn')
     t = str(datetime.datetime.now())
     if t[-12:-10]!=pt:
       with open(os.path.join(loc_dir,'local.log'),'a') as llog:
@@ -23,7 +23,7 @@ def download_bili_file(videoName,list):
     except:
         pass
     if VAAvaliable(list,'N'):
-        return '<script>window.location.replace("https://mx.j2inter.corn/faq")</script>'
+        return redirect('https://mx.j2inter.corn')
     ua=request.headers.get('User-Agent')
     ip=request.remote_addr
     fileName = videoName+str(list)+".mp4"
@@ -32,9 +32,8 @@ def download_bili_file(videoName,list):
     print(videoName)
     if int(os.path.getsize(bili_dir)) >= 4294967296:
         a = os.system('rmdir /s /q {0}'.format(bili_dir))
-        for i in [bili_dir, qq_dir, wyy_dir]:
-            if not os.path.exists(i):
-                os.makedirs(i, exist_ok=True)
+        if not os.path.exists(bili_dir):
+            os.makedirs(bili_dir, exist_ok=True)
     requestJson = requests.get(bili_avid_api_url, headers=bili_headers, params={"keyword": videoName}, timeout=10).json()
     avid = aidResover(requestJson, int(list))
     cid = requests.get(bili_cid_api_url+"aid="+str(avid), headers=bili_headers).json()["data"]["cid"]
@@ -46,7 +45,7 @@ def download_bili_file(videoName,list):
 
 def download_bili_video(bv):
     if VAAvaliable(bv,'N'):
-        return '<script>window.location.replace("https://mx.j2inter.corn/faq")</script>'
+        return redirect('https://mx.j2inter.corn')
     fileName = bv+".mp4"
     if os.path.exists(os.path.join(bili_dir, fileName)):
         return send_from_directory(bili_dir, fileName)
