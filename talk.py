@@ -46,7 +46,7 @@ def send_msg():
             return '{"content":"No username provided"}'
         content=str(request.args.get('content'))
         targetuser=str(request.args.get('targetuser'))
-        key = str(request.ars.get('key'))
+        key = str(request.ars.get('key',"default"))
         targetFile=''
         if not targetuser:
             targetFile=f'msg{date}.json'
