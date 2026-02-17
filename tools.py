@@ -52,11 +52,11 @@ class FastXORCipher:
         if isinstance(data, str):
             data = data.encode('utf-8')
         
-        key_bytes = self._process_key(len(data))
+        self._process_key(len(data))
         
         # 使用内存视图和字节数组提高性能
         data_array = bytearray(data)
-        key_array = bytearray(key_bytes)
+        key_array = bytearray(self.key)
         
         # 使用简单的循环进行XOR操作（性能优先）
         # 这里使用while循环通常比for循环稍快

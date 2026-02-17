@@ -16,8 +16,8 @@ def read_message():
     user=userlist.get(str(request.remote_addr),"")
     key = request.args.get("key")
     if not key:
-        key = "default"
-    
+        key = 'default'
+    print("key:",key)
     if not user:
         return '{"content":"No username provided"}'
     if (not targetuser in userlist.values()) or not targetuser:
@@ -30,16 +30,15 @@ def read_message():
                 break
         if not targetFile:
             targetFile=f'msg{user+"_"+targetuser}.json'
-
-    try:
-        with open(os.path.join(message_dir,targetFile),'r',encoding='utf-8') as file:
-            return KeyDecoder(file.read(),key)
-    except Exception as e:
-        with open(os.path.join(message_dir,targetFile),'w',encoding='utf-8') as file:
-            time = str(datetime.datetime.now())
-            file.write(KeyDecoder('{"content":[{"sender":"system","time":"none","content":"Newfilecreated'+time+'","id":0}]}',key))
-        return '{"content":[{"sender":"system","time":"none","content":"Newfilecreated'+time+'","id":0}]}'
-
+    with open(os.path.join(message_dir,targetFile),'rb') as file:
+            filecontent=file.read()
+            if not filecontent:
+                with open(os.path.join(message_dir,targetFile),'wb') as file:
+                    time = str(datetime.datetime.now())
+                    file.write(KeyDecoder('{"content":[{"sender":"system","time":"none","content":"Newfilecreated'+time+'","id":0}]}',key))
+                return '{"content":[{"sender":"system","time":"none","content":"Newfilecreated'+time+'","id":0}]}'
+            return KeyDecoder(filecontent,key)
+       
 
 def send_msg():
         global date
@@ -48,9 +47,9 @@ def send_msg():
             return '{"content":"No username provided"}'
         content=str(request.args.get('content'))
         targetuser=str(request.args.get('targetuser'))
-        key = request.ars.get('key')
+        key = request.args.get('key',"default")
         if not key:
-            key = "default"
+            key='default'
         targetFile=''
         if not targetuser:
             targetFile=f'msg{date}.json'
@@ -62,12 +61,12 @@ def send_msg():
                     break
             if not targetFile:
                 targetFile=f'msg{sender+"_"+targetuser}.json'
-        with open(os.path.join(message_dir,targetFile),'r',encoding='utf-8') as f:
+        with open(os.path.join(message_dir,targetFile),'rb') as f:
             file=json.loads(KeyDecoder(f.read(),key))
-        with open(os.path.join(message_dir,targetFile),'w',encoding='utf-8') as f:
+        with open(os.path.join(message_dir,targetFile),'wb') as f:
             id = file["content"][-1]["id"]
             file['content'].append({'sender':sender,'time':str(datetime.datetime.now())[-15:-7],'content':content, "id":id+1})
-            f.write(KeyDecoder(json.dumps(file,ensure_ascii=False)),key)
+            f.write(KeyDecoder(json.dumps(file,ensure_ascii=False),key))
         return 'ok'
 
 
