@@ -2,6 +2,139 @@ import requests, os, json
 from config import *
 from flask import request, send_from_directory, redirect
 from typing import Dict, Any
+import os
+import hashlib
+from typing import Union, Optional
+import secrets
+
+class FastXORCipher:
+    """高性能XOR加密器，支持自定义长度密钥"""
+    
+    def __init__(self):
+        pass
+    
+    def _process_key(self, key: Union[str, bytes], data_length: int) -> bytes:
+        """处理密钥，扩展到与数据相同长度"""
+        if isinstance(key, str):
+            key = key.encode('utf-8')
+        
+        # 如果密钥为空，使用随机密钥
+        if not key:
+            key = secrets.token_bytes(32)
+        
+        # 扩展密钥到数据长度
+        if len(key) < data_length:
+            # 使用哈希扩展
+            expanded_key = bytearray()
+            hash_obj = hashlib.sha256(key)
+            
+            while len(expanded_key) < data_length:
+                hash_obj.update(hash_obj.digest())
+                expanded_key.extend(hash_obj.digest())
+            
+            key = bytes(expanded_key[:data_length])
+        elif len(key) > data_length:
+            key = key[:data_length]
+        
+        return key
+    
+    def encrypt(self, data: Union[str, bytes], key: Union[str, bytes]) -> bytes:
+        """
+        加密数据
+        
+        参数:
+            data: 要加密的数据（字符串或字节）
+            key: 加密密钥（字符串或字节）
+        
+        返回:
+            加密后的字节数据
+        """
+        if isinstance(data, str):
+            data = data.encode('utf-8')
+        
+        key_bytes = self._process_key(key, len(data))
+        
+        # 使用内存视图和字节数组提高性能
+        data_array = bytearray(data)
+        key_array = bytearray(key_bytes)
+        
+        # 使用简单的循环进行XOR操作（性能优先）
+        # 这里使用while循环通常比for循环稍快
+        i = 0
+        length = len(data_array)
+        while i < length:
+            data_array[i] ^= key_array[i]
+            i += 1
+        
+        return bytes(data_array)
+    
+    def decrypt(self, encrypted_data: bytes, key: Union[str, bytes]) -> bytes:
+        """
+        解密数据
+        
+        参数:
+            encrypted_data: 加密的数据
+            key: 解密密钥（必须与加密时相同）
+        
+        返回:
+            解密后的字节数据
+        """
+        # XOR加密的解密与加密过程完全相同
+        return self.encrypt(encrypted_data, key)
+    
+    def encrypt_to_hex(self, data: Union[str, bytes], key: Union[str, bytes]) -> str:
+        """加密并返回十六进制字符串"""
+        encrypted = self.encrypt(data, key)
+        return encrypted.hex()
+    
+    def decrypt_from_hex(self, hex_string: str, key: Union[str, bytes]) -> bytes:
+        """从十六进制字符串解密"""
+        encrypted_data = bytes.fromhex(hex_string)
+        return self.decrypt(encrypted_data, key)
+    
+    def encrypt_file(self, input_file: str, output_file: str, key: Union[str, bytes], 
+                    chunk_size: int = 8192):
+        """
+        加密文件
+        
+        参数:
+            input_file: 输入文件路径
+            output_file: 输出文件路径
+            key: 加密密钥
+            chunk_size: 每次读取的块大小（字节）
+        """
+        # 获取文件大小以处理密钥
+        file_size = os.path.getsize(input_file)
+        key_bytes = self._process_key(key, min(file_size, 1024*1024))  # 限制最大1MB密钥扩展
+        
+        with open(input_file, 'rb') as f_in, open(output_file, 'wb') as f_out:
+            total_read = 0
+            key_len = len(key_bytes)
+            
+            while True:
+                chunk = f_in.read(chunk_size)
+                if not chunk:
+                    break
+                
+                # 处理当前块
+                chunk_array = bytearray(chunk)
+                chunk_length = len(chunk)
+                
+                # 使用密钥的对应部分
+                key_start = total_read % key_len
+                for i in range(chunk_length):
+                    key_index = (key_start + i) % key_len
+                    chunk_array[i] ^= key_bytes[key_index]
+                
+                f_out.write(bytes(chunk_array))
+                total_read += chunk_length
+    
+    def decrypt_file(self, input_file: str, output_file: str, key: Union[str, bytes], 
+                    chunk_size: int = 8192):
+        """解密文件（与加密过程相同）"""
+        self.encrypt_file(input_file, output_file, key, chunk_size)
+
+
 
 
 def decoder(input_str):
@@ -106,7 +239,6 @@ def VAAvaliable(filename,LorN=''):
         return True
     else:
         return False
-
 def WSAvaliable(service):
     global serverStatus
     print(serverStatus())
@@ -160,3 +292,6 @@ def change_userlist(mode,ip,username):
                 f.write(everyip + ":" + username + "\n")
                 print(everyip, username)
             f.truncate()
+
+def KeyDecoder(item):
+    return decoder(bytes(item))

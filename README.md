@@ -48,7 +48,7 @@
 
 <br/>
 
-其他方法请参考dns代理设置。
+其他方法请参考dns代理设置，自行探索，如果要自建dns服务器，推荐使用python库`dnslib`
 
 
 ### 2.1 安装依赖
@@ -63,7 +63,6 @@ pip install flask requests urllib3
 必须要配置的项：
 
 - `deepseek_api_key`：使用`encode.py`进行`base58`加密的deepseek api key。
-- `bili_cookie`：使用`encode.py`进行`base58`加密的bilibili的cookie，目前没有啥用。
 - `password`：使用`encode.py`进行`base58`加密的服务器管理密码。
 - 博查apikey：在`WebsiteService.py`的`execute_web_search`中的请求体处配置
 
@@ -177,4 +176,4 @@ app.run(
 
 ---
 
-*最后更新：2026/02/04 by Foundchair Done*
+*最后更新：2026/02/17 by Foundchair Done*

@@ -2,9 +2,10 @@ from flask import Flask
 import urllib3
 from tools import *
 from config import *
-from VAService import *
 from ControlService import *
 from WebsiteService import *
+from ai import *
+from talk import *
 
 app = Flask(__name__)           #初始化flask服务器
 app.config['JSON_AS_ASCII'] = False
@@ -12,8 +13,6 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 services = {'/':                            list_files,
             '/music':                       music_page,             #音乐
-            '/net/bili/<videoName>/<list>': download_bili_file,     #B站视频
-            '/net/bilibv/<bv>':             download_bili_video,    #B站指定bv视频
             '/local/<filename>':            serve_file,             #服务器端文件传输
             '/start':                       start,                  #启动对外服务
             '/exit':                        tmpexit,                #暂停对外服务
@@ -57,22 +56,18 @@ for path, func in services.items():
 def bancjb():
     userlist.delete('192.168.40.37')
     return "成功封禁cjb"
+    
+@app.route('/showuser')
+def showuser():
+    return str(userlist)
 
 
 # fun main() {
 if __name__ == "__main__":
-    print(
-        "\n"
-        "Download file from local                          /local/filename.extra\n"
-        "Download file from Neteasemusic                   /net/wyy/<songName>/<list>\n"
-        "Download file from QQmusic                        /net/qq/<songName>/<list>\n"
-        "Download file from Bilibili                       /net/bili/<keyword>/<list>\n"
-        "Download specified file from Bilibili             /net/bilibv/<bvid>\n"
-    )
 
     app.run(
         host="0.0.0.0",
-        port=80,
+        port=1145,
         threaded=True,
         debug=True
     )
