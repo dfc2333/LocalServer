@@ -7,7 +7,7 @@
             })
 
             async function renderMsg(){
-                MsgJson=await fetch('/message?targetuser='+document.getElementById('user').value)
+                MsgJson=await fetch('/message?targetuser='+document.getElementById('user').value+"&key="+encodeURIComponent(document.getElementById("key").value))
                 MsgJson=await MsgJson.json()
                 console.log(MsgJson)
                 Msgcontainer=document.getElementById("MsgBox")
@@ -43,7 +43,7 @@
             async function sendMsg(){
                 content=document.getElementById('content').value
                 user=document.getElementById('user').value
-                sth = await fetch('/sendmsg?content='+encodeURIComponent(content)+'&targetuser='+encodeURIComponent(user))
+                sth = await fetch('/sendmsg?content='+encodeURIComponent(content)+'&targetuser='+encodeURIComponent(user)+"&key="+encodeURIComponent(document.getElementById("key").value))
                 console.log(await sth.text())
                 clearmsg()
                 await renderMsg()
@@ -71,6 +71,8 @@
         <div id="MsgBox" class="scrollable"></div>
         <input type="text" id="content" placeholder="message...">
         <input type="text" id="user" placeholder="私聊对象，留空以在班级群发送">
+        <label for="key">你和私聊对象商定的密钥，留空则使用默认</label>
+        <input type="text" id="key" placeholder="密钥。。。">
         <button onclick="sendMsg()">send</button>
         <button onclick="abc()">刷新</button>
         <div id="end"></div>
