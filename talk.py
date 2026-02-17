@@ -6,17 +6,15 @@ from config import date, message_dir
 from tools import (
     userlist,
     WSAvaliable as avaliable,
-    decoder,
     KeyDecoder
 )
-from encode import base58_encode
 
 def read_message():
     global date
     targetFile=''
     targetuser=str(request.args.get('targetuser')) if request.args.get('targetuser') else ''
     user=userlist.get(str(request.remote_addr),"")
-    key = request.args.get("key","")
+    key = request.args.get("key","default")
     
     if not user:
         return '{"content":"No username provided"}'
@@ -33,11 +31,11 @@ def read_message():
 
     try:
         with open(os.path.join(message_dir,targetFile),'r',encoding='utf-8') as file:
-            return KeyDecoder(bytes(file.read(),encoding='utf-8'))
+            return KeyDecoder(file.read(),key)
     except Exception as e:
         with open(os.path.join(message_dir,targetFile),'w',encoding='utf-8') as file:
             time = str(datetime.datetime.now())
-            file.write(base58_encode(bytes('{"content":[{"sender":"system","time":"none","content":"Newfilecreated'+time+'"}]}',encoding='utf-8')))
+            file.write(KeyDecoder('{"content":[{"sender":"system","time":"none","content":"Newfilecreated'+time+'","id":0}]}',key))
         return '{"content":[{"sender":"system","time":"none","content":"Newfilecreated'+time+'","id":0}]}'
 
 
@@ -48,6 +46,7 @@ def send_msg():
             return '{"content":"No username provided"}'
         content=str(request.args.get('content'))
         targetuser=str(request.args.get('targetuser'))
+        key = str(request.ars.get('key'))
         targetFile=''
         if not targetuser:
             targetFile=f'msg{date}.json'
@@ -60,11 +59,11 @@ def send_msg():
             if not targetFile:
                 targetFile=f'msg{sender+"_"+targetuser}.json'
         with open(os.path.join(message_dir,targetFile),'r',encoding='utf-8') as f:
-            file=json.loads(decoder(bytes(f.read(),encoding='utf-8')))
+            file=json.loads(KeyDecoder(f.read(),key))
         with open(os.path.join(message_dir,targetFile),'w',encoding='utf-8') as f:
             id = file["content"][-1]["id"]
             file['content'].append({'sender':sender,'time':str(datetime.datetime.now())[-15:-7],'content':content, "id":id+1})
-            f.write(base58_encode(bytes(json.dumps(file,ensure_ascii=False),encoding='utf-8')))
+            f.write(KeyDecoder(json.dumps(file,ensure_ascii=False)),key)
         return 'ok'
 
 
