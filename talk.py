@@ -14,7 +14,9 @@ def read_message():
     targetFile=''
     targetuser=str(request.args.get('targetuser')) if request.args.get('targetuser') else ''
     user=userlist.get(str(request.remote_addr),"")
-    key = request.args.get("key","default")
+    key = request.args.get("key")
+    if not key:
+        key = "default"
     
     if not user:
         return '{"content":"No username provided"}'
@@ -46,7 +48,9 @@ def send_msg():
             return '{"content":"No username provided"}'
         content=str(request.args.get('content'))
         targetuser=str(request.args.get('targetuser'))
-        key = str(request.ars.get('key',"default"))
+        key = request.ars.get('key')
+        if not key:
+            key = "default"
         targetFile=''
         if not targetuser:
             targetFile=f'msg{date}.json'

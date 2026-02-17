@@ -52,7 +52,7 @@ class FastXORCipher:
         if isinstance(data, str):
             data = data.encode('utf-8')
         
-        key_bytes = self._process_key(self.key, len(data))
+        key_bytes = self._process_key(len(data))
         
         # 使用内存视图和字节数组提高性能
         data_array = bytearray(data)
@@ -67,61 +67,6 @@ class FastXORCipher:
             i += 1
         
         return bytes(data_array)
-
-        """
-        解密数据
-        
-        参数:
-            encrypted_data: 加密的数据
-            key: 解密密钥（必须与加密时相同）
-        
-        返回:
-            解密后的字节数据
-        """
-        # XOR加密的解密与加密过程完全相同
-        return self.encrypt(encrypted_data)
-
-        """从十六进制字符串解密"""
-        encrypted_data = bytes.fromhex(hex_string)
-        return self.decrypt(encrypted_data)
-    
-    def decrypt_file(self, input_file: str, output_file: str, chunk_size: int = 8192):
-        """
-        加密文件
-        
-        参数:
-            input_file: 输入文件路径
-            output_file: 输出文件路径
-            key: 加密密钥
-            chunk_size: 每次读取的块大小（字节）
-        """
-        # 获取文件大小以处理密钥
-        file_size = os.path.getsize(input_file)
-        key_bytes = self._process_key(self.key, min(file_size, 1024*1024*16))  # 限制最大16MB密钥扩展
-        
-        with open(input_file, 'rb') as f_in, open(output_file, 'wb') as f_out:
-            total_read = 0
-            key_len = len(key_bytes)
-            
-            while True:
-                chunk = f_in.read(chunk_size)
-                if not chunk:
-                    break
-                
-                # 处理当前块
-                chunk_array = bytearray(chunk)
-                chunk_length = len(chunk)
-                
-                # 使用密钥的对应部分
-                key_start = total_read % key_len
-                for i in range(chunk_length):
-                    key_index = (key_start + i) % key_len
-                    chunk_array[i] ^= key_bytes[key_index]
-                
-                f_out.write(bytes(chunk_array))
-                total_read += chunk_length
-
-
 
 
 def decoder(input_str):
