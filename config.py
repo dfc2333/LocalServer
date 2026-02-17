@@ -88,15 +88,6 @@ date=str(datetime.datetime.now())[0:-16]
 
 defaultUA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
 headers = { "User-Agent": defaultUA }
-bili_avid_api_url = "https://api.bilibili.com/x/web-interface/wbi/search/all/v2"
-bili_cid_api_url = "https://api.bilibili.com/x/web-interface/view?"
-bili_video_api_url = "https://api.bilibili.com/x/player/wbi/playurl?"
-try:
-    bili_cookie = decoder(b"yourbilicookiehere")
-except ValueError as e:
-    print("bili cookie not filled")
-    bili_cookie=""
-bili_headers = { "User-Agent": defaultUA, "Cookie": bili_cookie }
 
 try:
     deepseek_api_key = decoder(b'<yourencodedapikeyhere>')
