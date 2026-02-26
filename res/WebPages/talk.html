@@ -23,11 +23,39 @@
 
             async function announce(){
                 if (document.getElementById('user').value!=""){return}
-                ann=await fetch('/announce')
-                ann=await ann.json()
-                console.log(ann)
-                annc=document.getElementById('ann')
-                annc.appendChild(crtMsg(ann.sender,ann.time,ann.content))
+                const annc = document.getElementById('ann')
+                annc.innerHTML = '' // 清空之前的内容
+                
+                try {
+                    const response = await fetch('/announce')
+                    const text = await response.text()
+                    console.log('公告响应:', text)
+                    
+                    if (!text || text.trim() === '') {
+                        annc.innerHTML = '<div class="no-announcement">暂无公告</div>'
+                        return
+                    }
+                    
+                    // 尝试解析为JSON
+                    try {
+                        const ann = JSON.parse(text)
+                        if (ann.content && ann.content.trim() !== '') {
+                            annc.appendChild(crtMsg(ann.sender, ann.time, ann.content))
+                        } else {
+                            annc.innerHTML = '<div class="no-announcement">暂无公告</div>'
+                        }
+                    } catch (jsonError) {
+                        // 如果不是JSON，当作纯文本公告
+                        if (text.trim() !== '') {
+                            annc.appendChild(crtMsg('系统', new Date().toLocaleTimeString(), text))
+                        } else {
+                            annc.innerHTML = '<div class="no-announcement">暂无公告</div>'
+                        }
+                    }
+                } catch (error) {
+                    console.error('获取公告失败:', error)
+                    annc.innerHTML = '<div class="no-announcement">暂无公告</div>'
+                }
             }
             function crtMsg(sender,time,content){
                 box=document.createElement('div')
@@ -143,6 +171,15 @@
                 padding: 10px;
                 margin-bottom: 15px;
                 border-left: 4px solid #f59e0b;
+            }
+            .no-announcement {
+                text-align: center;
+                color: #6b7280;
+                font-style: italic;
+                padding: 10px;
+                background-color: #f3f4f6;
+                border-radius: 6px;
+                border-left: 4px solid #9ca3af;
             }
         </style>
     </head>
