@@ -175,5 +175,11 @@ app.run(
 因为我们主要是给电脑白痴们用，所以没有防御性编程，理解一下
 
 ---
+## Thanks
+
+- [LocalServerKt](https://github.com/sti-233/LocalServerKt/tree/main)
+- [Flask](https://github.com/pallets/flask)
+---
+
 
 *最后更新：2026/02/17 by Foundchair Done*
