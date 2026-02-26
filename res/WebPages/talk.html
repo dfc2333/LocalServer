@@ -43,7 +43,7 @@
             async function sendMsg(){
                 content=document.getElementById('content').value
                 user=document.getElementById('user').value
-                sth = await fetch('/sendmsg?content='+encodeURIComponent(content)+'&targetuser='+encodeURIComponent(user)+"&key="+encodeURIComponent(document.getElementById("key").value))
+                sth = await fetch('/sendmsg?content='+encodeURIComponent(content)+'&targetuser='+user+"&key="+encodeURIComponent(document.getElementById("key").value))
                 console.log(await sth.text())
                 clearmsg()
                 await renderMsg()
