@@ -134,11 +134,17 @@ def send_msg():
 
 def announce():
     ctnt = request.args.get('content')
+    announcement_file = os.path.join(message_dir, 'announcement.data')
+    
     if ctnt:
-        with open(os.path.join(message_dir, 'announcement.data'), 'w', encoding='utf-8') as f:
+        with open(announcement_file, 'w', encoding='utf-8') as f:
             f.write(ctnt)
     else:
-        with open(os.path.join(message_dir, 'announcement.data'), 'r', encoding='utf-8') as f:
+        # 检查文件是否存在，不存在则创建空文件
+        if not os.path.exists(announcement_file):
+            with open(announcement_file, 'w', encoding='utf-8') as f:
+                f.write('')
+        with open(announcement_file, 'r', encoding='utf-8') as f:
             return f.read()
 
 def talker():
