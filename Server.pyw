@@ -47,6 +47,10 @@ services = {'/':                            list_files,
             '/getname':                     getName,                #获取用户名
             '/getreadme':                   getReadme,              #获取readme文件内容
             '/savereadme':                  saveReadme,             #保存readme文件内容
+            '/group/create':                create_group,           #创建群聊
+            '/group/join':                  join_group,             #加入群聊
+            '/group/list':                  list_groups,            #获取群聊列表
+            '/group/info':                  group_info,             #获取群聊信息
 }
 
 for path, func in services.items():
