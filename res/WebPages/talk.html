@@ -1,5 +1,7 @@
-﻿<html>
+<!DOCTYPE html>
+<html>
     <head>
+        <link rel="stylesheet" href="/res/ai.css">
         <script>
             document.addEventListener('DOMContentLoaded',function(){
                 renderMsg()
@@ -16,7 +18,7 @@
                     Msgcontainer.appendChild(newmsg)
                 }
                 end=document.getElementById('end')
-                end.scrollIntoView({behavious:"smooth"})
+                end.scrollIntoView({behavior:"smooth"})
             }
 
             async function announce(){
@@ -29,12 +31,27 @@
             }
             function crtMsg(sender,time,content){
                 box=document.createElement('div')
-                senderh=document.createElement('h2')
-                timeh=document.createElement('p')
-                contenth=document.createElement('p')
-                senderh.textContent=sender
-                timeh.textContent=time
-                contenth.textContent=content
+                box.className = 'message'
+                if(sender === 'system'){
+                    box.className += ' system-message'
+                } else if(sender === document.getElementById('user').value){
+                    box.className += ' user-message'
+                } else {
+                    box.className += ' other-message'
+                }
+                
+                senderh=document.createElement('div')
+                senderh.className = 'message-header'
+                senderh.textContent = sender
+                
+                timeh=document.createElement('div')
+                timeh.className = 'message-time'
+                timeh.textContent = time
+                
+                contenth=document.createElement('div')
+                contenth.className = 'message-content'
+                contenth.textContent = content
+                
                 box.appendChild(senderh)
                 box.appendChild(timeh)
                 box.appendChild(contenth)
@@ -58,23 +75,121 @@
             }
         </script>
         <style>
-            .scrollable{
-                x:90%;
+            .talk-container {
+                max-width: 800px;
+                margin: 0 auto;
+                padding: 20px;
+            }
+            .messages-panel {
+                height: 60vh;
                 overflow-y: auto;
+                margin-bottom: 20px;
+                padding: 15px;
+                background-color: #f8fafc;
+                border-radius: 10px;
+                border: 2px solid #e2e8f0;
+            }
+            .message {
+                margin-bottom: 15px;
+                padding: 12px;
+                border-radius: 10px;
                 word-wrap: break-word;
+            }
+            .system-message {
+                background-color: #fef3c7;
+                border-left: 4px solid #f59e0b;
+            }
+            .user-message {
+                background-color: #dbeafe;
+                border-left: 4px solid #3b82f6;
+                margin-left: 20%;
+            }
+            .other-message {
+                background-color: #f3f4f6;
+                border-left: 4px solid #9ca3af;
+                margin-right: 20%;
+            }
+            .message-header {
+                font-weight: 600;
+                color: #1f2937;
+                margin-bottom: 5px;
+            }
+            .message-time {
+                font-size: 0.8rem;
+                color: #6b7280;
+                margin-bottom: 8px;
+            }
+            .message-content {
+                line-height: 1.5;
+            }
+            .input-row {
+                display: flex;
+                gap: 10px;
+                margin-bottom: 15px;
+                flex-wrap: wrap;
+            }
+            .input-row input {
+                flex: 1;
+                min-width: 200px;
+            }
+            .button-row {
+                display: flex;
+                gap: 10px;
+                margin-top: 20px;
+            }
+            #ann {
+                background-color: #fef3c7;
+                border-radius: 8px;
+                padding: 10px;
+                margin-bottom: 15px;
+                border-left: 4px solid #f59e0b;
             }
         </style>
     </head>
     <body>
-        <h1>Talk</h1>
-        <div id="ann" style="position: fixed;background-color: grey;"></div>
-        <div id="MsgBox" class="scrollable"></div>
-        <input type="text" id="content" placeholder="message...">
-        <input type="text" id="user" placeholder="私聊对象，留空以在班级群发送">
-        <label for="key">你和私聊对象商定的密钥，留空则使用默认</label>
-        <input type="text" id="key" placeholder="密钥。。。">
-        <button onclick="sendMsg()">send</button>
-        <button onclick="abc()">刷新</button>
-        <div id="end"></div>
+        <div class="container talk-container">
+            <div class="header">
+                <h1>Talk</h1>
+                <p class="subtitle">聊天室 - 私聊或群聊</p>
+            </div>
+            
+            <div id="ann"></div>
+            
+            <div class="panel messages-panel">
+                <div id="MsgBox"></div>
+                <div id="end"></div>
+            </div>
+            
+            <div class="panel">
+                <div class="input-group">
+                    <label for="content">消息内容</label>
+                    <input type="text" id="content" placeholder="输入要发送的消息...">
+                </div>
+                
+                <div class="input-row">
+                    <div class="input-group" style="flex: 2;">
+                        <label for="user">私聊对象或群聊</label>
+                        <input type="text" id="user" placeholder="用户名（私聊）或 @群聊名（群聊），留空为公共聊天">
+                    </div>
+                    <div class="input-group" style="flex: 1;">
+                        <label for="key">加密密钥</label>
+                        <input type="text" id="key" placeholder="留空使用默认密钥">
+                    </div>
+                </div>
+                
+                <div class="button-row">
+                    <button class="primary-btn" onclick="sendMsg()">发送消息</button>
+                    <button class="secondary-btn" onclick="abc()">刷新消息</button>
+                </div>
+                
+                <div class="tip">
+                    <p>💡 提示：</p>
+                    <p>• 私聊：输入对方的用户名</p>
+                    <p>• 群聊：输入 @群聊名称（如 @技术群）</p>
+                    <p>• 公共聊天：留空即可</p>
+                    <p>• 使用 /group/create 创建群聊，/group/list 查看群聊列表</p>
+                </div>
+            </div>
+        </div>
     </body>
 </html>
