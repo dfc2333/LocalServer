@@ -116,8 +116,8 @@ with open(os.path.join(log_dir,'local.log'),'w') as locallog:
 try:
     password=decoder(b'yourpasswordencodedhere')
 except ValueError:
-    print("password not given, you won't be able to /start the server.")
-    password=""
+    print("password not given,set to default:abc123")
+    password="abc123"
 
 if not os.path.exists(os.path.join(root, "userlist.txt")):
     with open(os.path.join(root, "userlist.txt"), "w+") as f:

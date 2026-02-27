@@ -161,12 +161,19 @@ def create_group():
     if not group_name:
         return '{"error":"Group name required"}'
     
+    access_key = request.args.get('access_key', '')
+    # 如果未提供密钥，生成一个随机密钥（6位数字）
+    if not access_key:
+        import random
+        access_key = str(random.randint(100000, 999999))
+    
     groups = load_groups()
     
     groups[group_name] = {
         'creator': user,
         'members': [user],
-        'created_at': str(datetime.datetime.now())
+        'created_at': str(datetime.datetime.now()),
+        'access_key': access_key
     }
     save_groups(groups)
     
@@ -176,7 +183,7 @@ def create_group():
         time = str(datetime.datetime.now())
         f.write(KeyDecoder('{"content":[{"sender":"system","time":"none","content":"Group created '+time+'","id":0}]}', 'default'))
     
-    return json.dumps({'success': True,'group_name': group_name})
+    return json.dumps({'success': True, 'group_name': group_name, 'access_key': access_key})
 
 def join_group():
     """加入群聊"""
@@ -188,13 +195,28 @@ def join_group():
     if not group_name:
         return '{"error":"Group ID required"}'
     
+    access_key = request.args.get('access_key', '')
+    
     groups = load_groups()
     if group_name not in groups:
         return '{"error":"Group not found"}'
     
-    if user not in groups[group_name]['members']:
-        groups[group_name]['members'].append(user)
-        save_groups(groups)
+    group = groups[group_name]
+    
+    # 检查用户是否已经是成员
+    if user in group['members']:
+        return json.dumps({'success': True, 'group_name': group_name, 'message': 'Already a member'})
+    
+    # 验证访问密钥
+    if 'access_key' in group and group['access_key']:
+        if not access_key:
+            return '{"error":"Access key required"}'
+        if access_key != group['access_key']:
+            return '{"error":"Invalid access key"}'
+    
+    # 添加用户到成员列表
+    groups[group_name]['members'].append(user)
+    save_groups(groups)
     
     return json.dumps({'success': True, 'group_name': group_name})
 

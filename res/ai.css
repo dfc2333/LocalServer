@@ -11,7 +11,6 @@
             color: #333;
             line-height: 1.6;
             min-height: 100vh;
-            padding: 20px;
         }
         
         .container {
@@ -64,12 +63,6 @@
             border-radius: 16px;
             padding: 25px;
             box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        
-        .panel:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
         }
         
         .panel-title {
@@ -89,7 +82,7 @@
         }
         
         .input-group {
-            margin-bottom: 20px;
+            margin-bottom: 5px;
         }
         
         label {

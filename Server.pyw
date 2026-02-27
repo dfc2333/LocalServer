@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, send_from_directory
 import urllib3
 from tools import *
 from config import *
@@ -6,10 +6,22 @@ from ControlService import *
 from WebsiteService import *
 from ai import *
 from talk import *
+from websocket_talk import *
 
 app = Flask(__name__)           #初始化flask服务器
 app.config['JSON_AS_ASCII'] = False
+app.config['SECRET_KEY'] = 'your-secret-key-here'  # Needed for SocketIO sessions
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+# Initialize SocketIO
+socketio = init_socketio(app)
+# WebSocket talk page
+def talker_ws():
+    """Serve WebSocket version of talk page"""
+    # For now, serve the same HTML but we'll create a separate version later
+    # that uses WebSocket instead of HTTP polling
+    from tools import WSAvaliable
+    return WSAvaliable('talk_ws.html')
 
 services = {'/':                            list_files,
             '/music':                       music_page,             #音乐
@@ -51,10 +63,14 @@ services = {'/':                            list_files,
             '/group/join':                  join_group,             #加入群聊
             '/group/list':                  list_groups,            #获取群聊列表
             '/group/info':                  group_info,             #获取群聊信息
+            '/talk_ws':                     talker_ws,              #WebSocket talk主页面
 }
 
 for path, func in services.items():
     app.route(path)(func)
+
+# Register SocketIO event handlers
+register_socketio_events(socketio)
 
 @app.route('/bancjb')
 def bancjb():
@@ -69,11 +85,12 @@ def showuser():
 # fun main() {
 if __name__ == "__main__":
 
-    app.run(
+    socketio.run(
+        app,
         host="0.0.0.0",
         port=1145,
-        threaded=True,
-        debug=True
+        debug=True,
+        allow_unsafe_werkzeug=True
     )
 
 # }
