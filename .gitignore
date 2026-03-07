@@ -2,5 +2,5 @@ __pycache__/
 downloaded/local/
 messages/
 logs/
-venv/
-pyproject.toml
+.venv/
+.*/
