@@ -90,7 +90,7 @@ defaultUA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML
 headers = { "User-Agent": defaultUA }
 
 try:
-    deepseek_api_key = decoder(b'<yourencodedapikeyhere>')
+    deepseek_api_key = decoder(b'nth')
 except ValueError:
     print("deepseek api key not set")
     deepseek_api_key = ""

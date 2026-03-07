@@ -3,3 +3,4 @@ downloaded/local/
 messages/
 logs/
 venv/
+pyproject.toml

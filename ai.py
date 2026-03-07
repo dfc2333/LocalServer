@@ -4,6 +4,7 @@ import datetime
 import requests
 from bs4 import BeautifulSoup
 from config import *
+from flask import request
 from tools import (
     WSAvaliable as avaliable,
     OnlyAvailable,
@@ -66,15 +67,16 @@ def open_link(link):
       return "出现未知错误"+str(e)
 
 def getaiapi():
-    user = str(request.args.get('user'))
-    hisid = request.args.get('hisid')
-    modelName = str(request.args.get('model')) if request.args.get('model') else 'deepseek-chat'
-    username = userlist.get(str(request.remote_addr),None)
+    data=request.get_json()
+    user = data.get('user','')
+    hisid = data.get('hisid','')
+    modelName = data.get('model','') if data.get('model','') else 'deepseek-chat'
+    username = userlist.get(str(request.remote_addr),'')
     result=''
     content1=''
     # 添加工具调用相关参数
-    use_search = request.args.get('search', 'false').lower() == 'true'
-    max_search_results = int(request.args.get('max_results', 10))
+    use_search = data.get('search', 'false').lower() == 'true'
+    max_search_results = int(data.get('max_results', 10))
 
     if not username:
         return "No username provided"
@@ -90,12 +92,12 @@ def getaiapi():
             with open(history_file, 'r', encoding='utf-8') as f:
                 content = f.read()
                 history = json.loads(content) if content else []
-                if request.args.get("system"):
-                    history.insert(0, {"role": "system", "content": str(request.args.get("system"))})
+                if data.get("system") and history[0]['role']!='system':
+                    history.insert(0, {"role": "system", "content": str(data.get("system"))})
         else:
-                history = [{"role": "system", "content": str(request.args.get("system"))}] if request.args.get("system") else []
+                history = [{"role": "system", "content": str(data.get("system"))}] if data.get("system") else []
     else:
-        history = [{"role": "system", "content": str(request.args.get("system"))}] if request.args.get("system") else []
+        history = [{"role": "system", "content": str(data.get("system"))}] if data.get("system") else []
 
     # 添加当前用户输入到历史记录
     history.append({"role": "user", "content": user})
@@ -151,10 +153,6 @@ def getaiapi():
             }
         }
     ]
-    
-    # 实际执行搜索的函数
-    
-    
     # 设置是否使用工具
     tools = search_tools if use_search else None
     tool_choice = "auto" if use_search else "none"
@@ -170,7 +168,7 @@ def getaiapi():
             "model": modelName,
             "messages": api_messages,
             "stream": False,
-            "temperature": float(str(request.args.get("temp"))) if request.args.get("temp") else 1.3
+            "temperature": float(str(data.get("temp"))) if data.get("temp") else 1.3
         }
         print(api_data)
         

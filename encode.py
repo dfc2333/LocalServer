@@ -19,6 +19,6 @@ def base58_encode(bytes):
     return encoded
 
 if __name__ == "__main__":
-    data = b'dfcfrhnb'
+    data = b'abc123'
     encoded = base58_encode(data)
     print(encoded)

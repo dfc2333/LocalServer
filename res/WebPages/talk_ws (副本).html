@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" href="/res/ai.css">
+        <script src="/res/socket.js"></script>
+        <script>
+            // Global variables
+            let socket = null;
+            let currentUsername = '';
+            let currentTarget = '';
+            let currentKey = 'default';
+            let currentRoom = '';
+            let messages = []; // Store messages with indices for deletion
+            
+            document.addEventListener('DOMContentLoaded', function() {
+                initializeConnection();
+                setupEventListeners();
+                loadAnnouncement();
+            });
+            
+            function initializeConnection() {
+                // Connect to WebSocket server
+                socket = io();
+                
+                // Set up event listeners
+                socket.on('connect', function() {
+                    console.log('Connected to WebSocket server');
+                    const statusElement = document.getElementById('status');
+                    const statusTextElement = document.getElementById('statusText');
+                    
+                    // Update status indicator (dot) - use CSS class
+                    statusElement.classList.add('connected');
+                    
+                    // Update status text
+                    statusTextElement.textContent = '已连接';
+                    statusTextElement.style.color = '#48bb78';
+                    
+                    // Try to get username from URL or localStorage
+                    currentUsername = getUsername();
+                    if (currentUsername && currentUsername !== 'anonymous') {
+                        document.getElementById('usernameDisplay').textContent = `用户: ${currentUsername}`;
+                    }
+                });
+                
+                socket.on('connected', function(data) {
+                    console.log('Server connected response:', data);
+                    if (data.username) {
+                        currentUsername = data.username;
+                        document.getElementById('usernameDisplay').textContent = `用户: ${currentUsername}`;
+                    }
+                });
+                
+                socket.on('disconnect', function() {
+                    console.log('Disconnected from WebSocket server');
+                    const statusElement = document.getElementById('status');
+                    const statusTextElement = document.getElementById('statusText');
+                    
+                    // Update status indicator (dot) - use CSS class
+                    statusElement.classList.remove('connected');
+                    
+                    // Update status text
+                    statusTextElement.textContent = '未连接';
+                    statusTextElement.style.color = '#f56565';
+                });
+                
+                socket.on('joined', function(data) {
+                    console.log('Joined room:', data);
+                    currentRoom = data.room;
+                    document.getElementById('roomInfo').textContent = `房间: ${data.target || '公共聊天'}`;
+                    
+                    // 更新用户名显示（从服务器返回）
+                    if (data.username) {
+                        currentUsername = data.username;
+                        document.getElementById('usernameDisplay').textContent = `用户: ${currentUsername}`;
+                    }
+                });
+                
+                socket.on('left', function(data) {
+                    console.log('Left room:', data);
+                    if (currentRoom === data.room) {
+                        currentRoom = '';
+                        document.getElementById('roomInfo').textContent = '房间: 未加入';
+                    }
+                });
+                
+                socket.on('message_history', function(data) {
+                    console.log('Received message history:', data);
+                    messages = data.messages;
+                    renderMessages(messages);
+                });
+                
+                socket.on('new_message', function(data) {
+                    console.log('New message received:', data);
+                    messages.push(data.message);
+                    addMessageToUI(data.message);
+                });
+                
+                socket.on('message_deleted', function(data) {
+                    console.log('Message deleted:', data);
+                    removeMessageFromUI(data.index);
+                    // Update local messages array
+                    if (data.index >= 0 && data.index < messages.length) {
+                        messages.splice(data.index, 1);
+                        // Update indices for remaining messages
+                        for (let i = 0; i < messages.length; i++) {
+                            messages[i].id = i;
+                        }
+                    }
+                });
+                
+                socket.on('error', function(data) {
+                    console.error('WebSocket error:', data);
+                    showError(data.message);
+                });
+                
+                socket.on('message_sent', function(data) {
+                    console.log('Message sent successfully:', data);
+                    // Clear input field
+                    document.getElementById('content').value = '';
+                });
+                
+                socket.on('delete_success', function(data) {
+                    console.log('Message deleted successfully:', data);
+                });
+                
+                socket.on('group_created', function(data) {
+                    console.log('Group created:', data);
+                    const accessKey = data.access_key || '无密钥';
+                    alert(`群聊 "${data.group_name}" 创建成功！\n访问密钥: ${accessKey}\n\n请记下此密钥，其他人需要此密钥才能加入群聊。`);
+                });
+            }
+            
+            function setupEventListeners() {
+                // Send message button
+                document.getElementById('sendButton').addEventListener('click', sendMessage);
+                
+                // Enter key in message input
+                document.getElementById('content').addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        sendMessage();
+                    }
+                });
+                
+                // Refresh button
+                document.getElementById('refreshButton').addEventListener('click', function() {
+                    if (currentRoom) {
+                        joinCurrentChat();
+                    }
+                });
+                
+                // Join chat button
+                document.getElementById('joinButton').addEventListener('click', joinCurrentChat);
+                
+                // Create group button
+                document.getElementById('createGroupButton').addEventListener('click', createGroup);
+                
+                // Delete message button (for testing)
+                document.getElementById('deleteButton').addEventListener('click', deleteLastMessage);
+            }
+            
+            function getUsername() {
+                // 用户名从后端基于IP获取，前端不直接设置
+                // 返回空字符串，等待后端返回用户名
+                return '';
+            }
+            
+            function joinCurrentChat() {
+                if (!socket.connected) {
+                    showError('未连接到服务器');
+                    return;
+                }
+                
+                currentTarget = document.getElementById('user').value.trim();
+                currentKey = document.getElementById('key').value.trim() || 'default';
+                
+                // 检查是否是群聊（以@开头）
+                if (currentTarget && currentTarget.startsWith('@')) {
+                    const groupName = currentTarget.substring(1);
+                    // 询问群聊访问密钥
+                    const groupKey = prompt(`请输入群聊 "${groupName}" 的访问密钥：`, '');
+                    if (groupKey === null) {
+                        return; // 用户取消
+                    }
+                    
+                    // Clear messages
+                    messages = [];
+                    document.getElementById('MsgBox').innerHTML = '';
+                    
+                    // Join room with group key
+                    socket.emit('join', {
+                        target: currentTarget,
+                        key: currentKey,
+                        group_key: groupKey
+                    });
+                } else {
+                    // 公共聊天或私聊，不需要群聊密钥
+                    // Clear messages
+                    messages = [];
+                    document.getElementById('MsgBox').innerHTML = '';
+                    
+                    // Join room
+                    socket.emit('join', {
+                        target: currentTarget,
+                        key: currentKey
+                    });
+                }
+            }
+            
+            function sendMessage() {
+                if (!socket.connected) {
+                    showError('未连接到服务器');
+                    return;
+                }
+                
+                if (!currentRoom) {
+                    showError('请先加入一个聊天');
+                    return;
+                }
+                
+                const content = document.getElementById('content').value.trim();
+                if (!content) {
+                    showError('消息内容不能为空');
+                    return;
+                }
+                
+                socket.emit('send_message', {
+                    content: content,
+                    target: currentTarget,
+                    key: currentKey
+                });
+            }
+            
+            function createGroup() {
+                if (!socket.connected) {
+                    showError('未连接到服务器');
+                    return;
+                }
+                
+                const groupName = prompt('请输入群聊名称:', '');
+                if (!groupName) {
+                    return; // 用户取消
+                }
+                
+                const accessKey = prompt('请输入访问密钥（可选，留空将自动生成6位数字密钥）:', '');
+                // 如果用户点击取消，accessKey为null，应该设置为空字符串
+                const groupKey = accessKey === null ? '' : accessKey;
+                
+                socket.emit('create_group', {
+                    name: groupName,
+                    access_key: groupKey
+                });
+            }
+            
+            function deleteMessage(index) {
+                if (!socket.connected) {
+                    showError('未连接到服务器');
+                    return;
+                }
+                
+                if (!currentRoom) {
+                    showError('请先加入一个聊天');
+                    return;
+                }
+                
+                if (index < 0 || index >= messages.length) {
+                    showError('无效的消息索引');
+                    return;
+                }
+                
+                socket.emit('delete_message', {
+                    target: currentTarget,
+                    key: currentKey,
+                    index: index
+                });
+            }
+            
+            function deleteLastMessage() {
+                if (messages.length === 0) {
+                    showError('没有消息可删除');
+                    return;
+                }
+                
+                const lastIndex = messages.length - 1;
+                deleteMessage(lastIndex);
+            }
+            
+            function renderMessages(msgArray) {
+                const container = document.getElementById('MsgBox');
+                container.innerHTML = '';
+                
+                msgArray.forEach((msg, index) => {
+                    const messageElement = createMessageElement(msg, index);
+                    container.appendChild(messageElement);
+                });
+                
+                // Scroll to bottom
+                const end = document.getElementById('end');
+                if (end) {
+                    end.scrollIntoView({ behavior: 'smooth' });
+                }
+            }
+            
+            function addMessageToUI(message) {
+                const container = document.getElementById('MsgBox');
+                const messageElement = createMessageElement(message, messages.length - 1);
+                container.appendChild(messageElement);
+                
+                // Scroll to bottom
+                const end = document.getElementById('end');
+                if (end) {
+                    end.scrollIntoView({ behavior: 'smooth' });
+                }
+            }
+            
+            function removeMessageFromUI(index) {
+                const container = document.getElementById('MsgBox');
+                const messageElement = container.querySelector(`[data-index="${index}"]`);
+                if (messageElement) {
+                    // Add fade-out animation
+                    messageElement.style.transition = 'opacity 0.3s';
+                    messageElement.style.opacity = '0';
+                    setTimeout(() => {
+                        messageElement.remove();
+                        // Re-render to update indices
+                        renderMessages(messages);
+                    }, 300);
+                }
+            }
+            
+            function createMessageElement(message, index) {
+                const box = document.createElement('div');
+                box.className = 'message';
+                box.setAttribute('data-index', index);
+                
+                // Add delete button for user's own messages
+                if (message.sender === currentUsername) {
+                    box.classList.add('user-message');
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'delete-btn';
+                    deleteBtn.textContent = '撤回';
+                    deleteBtn.title = '撤回此消息';
+                    deleteBtn.onclick = () => deleteMessage(index);
+                    box.appendChild(deleteBtn);
+                } else if (message.sender === 'system') {
+                    box.classList.add('system-message');
+                } else {
+                    box.classList.add('other-message');
+                }
+                
+                const sender = document.createElement('div');
+                sender.className = 'message-header';
+                sender.textContent = `${message.sender} [#${index}]`;
+                
+                const time = document.createElement('div');
+                time.className = 'message-time';
+                time.textContent = message.time;
+                
+                const content = document.createElement('div');
+                content.className = 'message-content';
+                content.textContent = message.content;
+                
+                box.appendChild(sender);
+                box.appendChild(time);
+                box.appendChild(content);
+                
+                return box;
+            }
+            
+            function loadAnnouncement() {
+                // Load announcement via HTTP (not WebSocket)
+                fetch('/announce')
+                    .then(response => response.text())
+                    .then(text => {
+                        const annc = document.getElementById('ann');
+                        annc.innerHTML = '';
+                        
+                        if (!text || text.trim() === '') {
+                            annc.innerHTML = '<div class="no-announcement">暂无公告</div>';
+                            return;
+                        }
+                        
+                        try {
+                            const ann = JSON.parse(text);
+                            if (ann.content && ann.content.trim() !== '') {
+                                // Create announcement element
+                                const announcement = document.createElement('div');
+                                announcement.className = 'announcement-message';
+                                announcement.innerHTML = `<strong>${ann.sender || '系统'}</strong> ${ann.time ? `(${ann.time})` : ''}: ${ann.content}`;
+                                annc.appendChild(announcement);
+                            } else {
+                                annc.innerHTML = '<div class="no-announcement">暂无公告</div>';
+                            }
+                        } catch (e) {
+                            if (text.trim() !== '') {
+                                const announcement = document.createElement('div');
+                                announcement.className = 'announcement-message';
+                                announcement.innerHTML = `<strong>系统</strong>: ${text}`;
+                                annc.appendChild(announcement);
+                            } else {
+                                annc.innerHTML = '<div class="no-announcement">暂无公告</div>';
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('获取公告失败:', error);
+                        document.getElementById('ann').innerHTML = '<div class="no-announcement">暂无公告</div>';
+                    });
+            }
+            
+            function showError(message) {
+                const errorDiv = document.getElementById('errorMessage');
+                errorDiv.textContent = message;
+                errorDiv.style.display = 'block';
+                setTimeout(() => {
+                    errorDiv.style.display = 'none';
+                }, 3000);
+            }
+            
+            function showSuccess(message) {
+                const successDiv = document.getElementById('successMessage');
+                successDiv.textContent = message;
+                successDiv.style.display = 'block';
+                setTimeout(() => {
+                    successDiv.style.display = 'none';
+                }, 3000);
+            }
+        </script>
+        <style>
+            .talk-container {
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 5px;
+            }
+            .talk-layout {
+                display: flex;
+                gap: 10px;
+            }
+            .header {
+            text-align: center;
+            margin-bottom: 10px;
+            padding: 5px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            border-left: 0px solid #4a6ee0;
+            }
+            .left-column {
+                flex: 1;
+                min-width: 300px;
+                max-width: 400px;
+            }
+            .right-column {
+                flex: 2;
+                min-width: 500px;
+            }
+            .left-panel, .right-panel {
+                background: white;
+                border-radius: 16px;
+                padding: 5px;
+                box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+                margin-bottom: 5px;
+            }
+            .status-bar {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 5px;
+                background-color: #f8fafc;
+                border-radius: 8px;
+                border: 1px solid #e2e8f0;
+            }
+            .status-item {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+            .status-indicator {
+                width: 10px;
+                height: 10px;
+                border-radius: 50%;
+                background-color: #f56565; /* red for disconnected */
+            }
+            .status-indicator.connected {
+                background-color: #48bb78; /* green for connected */
+            }
+            #statusText {
+                color: #f56565; /* red for disconnected by default */
+            }
+            .messages-panel {
+                height: 48vh;
+                overflow-y: auto;
+                margin-bottom: 5px;
+                padding: 5px;
+                background-color: #f8fafc;
+                border-radius: 10px;
+                border: 2px solid #e2e8f0;
+            }
+            .message {
+                margin-bottom: 10px;
+                padding: 10px;
+                border-radius: 10px;
+                word-wrap: break-word;
+                position: relative;
+            }
+            .system-message {
+                background-color: #fef3c7;
+                border-left: 4px solid #f59e0b;
+            }
+            .user-message {
+                background-color: #dbeafe;
+                border-left: 4px solid #3b82f6;
+                margin-left: 20%;
+            }
+            .other-message {
+                background-color: #f3f4f6;
+                border-left: 4px solid #9ca3af;
+                margin-right: 20%;
+            }
+            .message-header {
+                font-weight: 600;
+                color: #1f2937;
+                margin-bottom: 5px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            .message-time {
+                font-size: 0.8rem;
+                color: #6b7280;
+                margin-bottom: 8px;
+            }
+            .message-content {
+                line-height: 1.5;
+            }
+            .delete-btn {
+                background-color: #f56565;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                padding: 2px 8px;
+                font-size: 0.8rem;
+                cursor: pointer;
+                margin-left: 10px;
+            }
+            .delete-btn:hover {
+                background-color: #e53e3e;
+            }
+            .input-panel {
+                padding: 5px;
+                background: white;
+                border-radius: 16px;
+                box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+                margin-bottom: 15px;
+            }
+            .input-row {
+                display: flex;
+                gap: 10px;
+                margin-bottom: 5px;
+                flex-wrap: wrap;
+            }
+            .input-row input {
+                flex: 1;
+                min-width: 200px;
+            }
+            .button-row {
+                display: flex;
+                gap: 10px;
+                margin-top: 5px;
+                flex-wrap: wrap;
+            }
+            .control-buttons {
+                display: flex;
+                gap: 10px;
+                margin-bottom: 15px;
+            }
+            #ann {
+                background-color: #fef3c7;
+                border-radius: 8px;
+                padding: 10px;
+                margin-bottom: 15px;
+                border-left: 4px solid #f59e0b;
+            }
+            .no-announcement {
+                text-align: center;
+                color: #6b7280;
+                font-style: italic;
+            }
+            .announcement-message {
+                padding: 8px;
+                border-bottom: 1px solid #fbbf24;
+            }
+            .error-message, .success-message {
+                padding: 10px;
+                border-radius: 8px;
+                margin-bottom: 15px;
+                display: none;
+            }
+            .error-message {
+                background-color: #fed7d7;
+                border-left: 4px solid #f56565;
+                color: #742a2a;
+            }
+            .success-message {
+                background-color: #c6f6d5;
+                border-left: 4px solid #48bb78;
+                color: #22543d;
+            }
+            .left-panel h3, .right-panel h3 {
+                margin-top: 0;
+                margin-bottom: 10px;
+                color: #2d3748;
+                font-size: 1.2rem;
+                border-bottom: 2px solid #e2e8f0;
+                padding-bottom: 10px;
+            }
+            .messages-panel-inner {
+                height: calc(45vh - 50px);
+                overflow-y: auto;
+                padding: 12px;
+                background-color: #f8fafc;
+                border-radius: 10px;
+                border: 2px solid #e2e8f0;
+            }
+            .input-panel-inner {
+                padding: 10px;
+                background: white;
+                border-radius: 16px;
+                box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            }
+            .tip {
+                background-color: #f8fafc;
+                border-left: 4px solid #4299e1;
+                padding: 12px 16px;
+                border-radius: 8px;
+                font-size: 0.9rem;
+                line-height: 1.5;
+            }
+            .tip p {
+                margin-bottom: 8px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class='container talk-container'>
+            <div class='talk-layout'>
+                <!-- 左栏 -->
+                <div class='left-column'>
+                    <div class='header'>
+                        <h1>WebSocket Talk</h1>
+                        <p class='subtitle'>实时聊天 - 支持消息撤回</p>
+                    </div>
+                    <div id='errorMessage' class='error-message'></div>
+                    <div id='successMessage' class='success-message'></div>
+                    <!-- 状态面板 -->
+                    <div class='left-panel status-panel'>
+                        <h3>📊 状态</h3>
+                        <div class='status-bar'>
+                            <div class='status-item'>
+                                <div id='status' class='status-indicator'></div>
+                                <span id='statusText'>未连接</span>
+                            </div>
+                            <div class='status-item' id='usernameDisplay'>用户: 未设置</div>
+                            <div class='status-item' id='roomInfo'>房间: 未加入</div>
+                        </div>
+                    </div>
+                    
+                    <!-- 公告面板 -->
+                    <div class='left-panel announcement-panel'>
+                        <h3>📢 公告</h3>
+                        <div id='ann'></div>
+                    </div>
+                    
+                    <!-- 控制面板 -->
+                    <div class='left-panel control-panel'>
+                        <h3>⚙️ 控制</h3>
+                        <div class='control-buttons'>
+                            <div>
+                                <button id='joinButton' class='primary-btn' style="border-bottom: 3px solid white;">加入聊天</button>
+                                <button id='createGroupButton' class='secondary-btn'>创建群聊</button>
+                            </div>
+                            <div>
+                                <button id='refreshButton' class='secondary-btn' style="border-bottom: 3px solid white;">刷新消息</button>
+                                <button id='deleteButton' class='secondary-btn'>撤回最后一条</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 提示面板 -->
+                    <div class='left-panel tip-panel'>
+                        <h3>💡 提示</h3>
+                        <div class='tip'>
+                            <p>1. 先在<a href='/login' target='_blank' style='color: #4299e1; text-decoration: none;'>登录页面</a>设置用户名</p>
+                            <p>2. 点击"加入聊天"进入对话</p>
+                            <p>3. 私聊：输入对方的用户名</p>
+                            <p>4. 群聊：输入 @群聊名称（如 @技术群）</p>
+                            <p>5. 群聊需要访问密钥，创建时会显示</p>
+                            <p>6. 公共聊天：留空即可</p>
+                            <p>7. 点击自己消息旁边的"撤回"按钮可以撤回消息</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 右栏 -->
+                <div class='right-column'>
+                    <!-- 消息面板 -->
+                    <div class='right-panel messages-panel'>
+                        <h3>💬 消息</h3>
+                        <div class='panel messages-panel-inner'>
+                            <div id='MsgBox'></div>
+                            <div id='end'></div>
+                        </div>
+                    </div>
+                    
+                    <!-- 输入面板 -->
+                    <div class='right-panel input-panel'>
+                        <h3>📝 发送消息</h3>
+                        <div class='panel input-panel-inner'>
+                            <div class='input-group'>
+                                <label for='content'>消息内容</label>
+                                <input type='text' id='content' placeholder='输入要发送的消息...'>
+                            </div>
+                            
+                            <div class='input-row'>
+                                <div class='input-group' style='flex: 2;'>
+                                    <label for='user'>私聊对象或群聊</label>
+                                    <input type='text' id='user' placeholder='用户名（私聊）或 @群聊名（群聊），留空为公共聊天'>
+                                </div>
+                                <div class='input-group' style='flex: 1;'>
+                                    <label for='key'>加密密钥</label>
+                                    <input type='text' id='key' placeholder='留空使用默认密钥'>
+                                </div>
+                            </div>
+                            
+                            <div class='button-row'>
+                                <button id='sendButton' class='primary-btn'>发送消息</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

@@ -13,10 +13,18 @@ from tools import KeyDecoder
 # Initialize SocketIO will be done in Server.pyw
 socketio = None
 
+# WebSocket talk page
+def talker_ws():
+    """Serve WebSocket version of talk page"""
+    # For now, serve the same HTML but we'll create a separate version later
+    # that uses WebSocket instead of HTTP polling
+    from tools import WSAvaliable
+    return WSAvaliable('talk_ws.html')
+
 def init_socketio(app):
     """Initialize SocketIO with the Flask app"""
     global socketio
-    socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
+    socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
     return socketio
 
 # Reuse group functions from talk.py
@@ -119,6 +127,11 @@ def register_socketio_events(socketio_instance=None):
         print(f"Client connected: {request.sid}")
         # Get username from userlist based on IP
         username = userlist.get(str(request.remote_addr), "")
+        
+        # 将用户加入个人房间，用于接收私信/群聊通知
+        if username:
+            join_room(f'user_{username}')
+            print(f"User {username} joined personal room user_{username}")
         
         print(f"User {username} (IP: {request.remote_addr}) connected with SID {request.sid}")
         emit('connected', {'message': f'Connected as {username or "anonymous"}', 'username': username})
@@ -260,11 +273,31 @@ def register_socketio_events(socketio_instance=None):
         # Save to file
         save_messages(file_path, messages, key)
         
-        # Broadcast to room
+        # Broadcast to room (users currently in this chat)
         emit('new_message', {
             'message': new_message,
             'target': target
         }, room=room)
+        
+        # --- 新增：向相关用户发送小红点通知 (other_new_message) ---
+        # 私聊：通知接收方（排除自己）
+        if target and not is_group_target(target):
+            receiver = target
+            if receiver != username:  # 不通知自己
+                socketio.emit('other_new_message', {'target': username}, room=f'user_{receiver}')
+                print(f"Notified {receiver} of new private message from {username}")
+        # 群聊：通知所有群成员（除自己外）
+        elif is_group_target(target):
+            group_name = get_group_name(target)
+            groups = load_groups()
+            group = groups.get(group_name)
+            if group:
+                members = group.get('members', [])
+                for member in members:
+                    if member != username:
+                        socketio.emit('other_new_message', {'target': target}, room=f'user_{member}')
+                        print(f"Notified {member} of new group message in {target}")
+        # ------------------------------------------------------------
         
         # Also send to sender for confirmation
         emit('message_sent', {'status': 'ok', 'message': new_message})

@@ -15,13 +15,6 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # Initialize SocketIO
 socketio = init_socketio(app)
-# WebSocket talk page
-def talker_ws():
-    """Serve WebSocket version of talk page"""
-    # For now, serve the same HTML but we'll create a separate version later
-    # that uses WebSocket instead of HTTP polling
-    from tools import WSAvaliable
-    return WSAvaliable('talk_ws.html')
 
 services = {'/':                            list_files,
             '/music':                       music_page,             #音乐
@@ -38,9 +31,8 @@ services = {'/':                            list_files,
             '/llog':                        llog,                   #服务器端视频传输日志
             '/end':                         end,                    #结束所有服务，关闭服务器程序
             '/ai':                          ai,                     #AI对话页面
-            '/api/get':                     getaiapi,               #获取AI对话接口
-            '/api/history/<id>':            gethistory,             #获取AI对话历史，未完成
-            '/res/<path:file>':             sendres,                #传输资源文件，如js，css等，用于render的html
+            '/api/history/<id>':            gethistory,             #获取AI对话历史
+            '/res/<path:file>':             sendres,                #传输资源文件，如js，css等
             '/erm':                         render,                 #渲染LaTeX和markdown
             '/contact/<path:a>':            contact,                #向电脑发送文本，并存储在根目录下的contacts.txt中
             '/view/<path:path>':            view,                   #浏览根目录下的文件，也可以后面跟路径
@@ -68,18 +60,16 @@ services = {'/':                            list_files,
 
 for path, func in services.items():
     app.route(path)(func)
+app.route('/api/get',methods=['POST'])(getaiapi)
 
 # Register SocketIO event handlers
 register_socketio_events(socketio)
 
-@app.route('/bancjb')
-def bancjb():
-    userlist.delete('192.168.40.37')
-    return "成功封禁cjb"
-    
 @app.route('/showuser')
 def showuser():
     return str(userlist)
+
+
 
 
 # fun main() {
@@ -88,9 +78,8 @@ if __name__ == "__main__":
     socketio.run(
         app,
         host="0.0.0.0",
-        port=1145,
+        port=80,
         debug=True,
-        allow_unsafe_werkzeug=True
     )
 
 # }

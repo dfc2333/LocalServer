@@ -37,8 +37,7 @@
 <body>
     <div class="container">
         <header class="header">
-            <h1>AI对话助手</h1>
-            <p class="subtitle">与AI进行智能对话，支持Markdown和LaTeX渲染，调整参数设置。测试\(\frac{a}{b}\)</p>
+            <h1>AI</h1>
             <div class="money-display">
                 <span class="money-label">账户余额:</span>
                 <span id="money">加载中...</span>
@@ -80,7 +79,7 @@
                 </div>
                 
                 <div class="input-group">
-                    <label for="sysprompt">系统提示词（角色设定）</label>
+                    <label for="sysprompt">系统提示词（角色设定，一个对话只能设置一次）</label>
                     <input type="text" id="sysprompt" value="你是一个AI助手，能够帮助用户解答问题、提供建议和进行对话。">
                 </div>
                 
@@ -138,10 +137,6 @@
                     </button>
             </div>
         </div>
-        
-        <div class="footer">
-            <p>AI对话助手 v1.0 | 支持Markdown和LaTeX渲染 | 使用前请确保已登录账户</p>
-        </div>
     </div>
     <script>
         // 初始化markdown-it解析器
@@ -186,7 +181,7 @@
                 return null;
             }
         }
-        
+        async function editHistory()
         // 获取AI回复
         async function getReply(search) {
             const userInput = getUserInput();
@@ -196,13 +191,23 @@
             const model = document.getElementById("model").value;
             
             try {
-                const response = await fetch("/api/get?user=" + encodeURIComponent(userInput) + 
-                    "&system=" + encodeURIComponent(sysPrompt) + 
-                    "&temp=" + temp + 
-                    "&hisid=" + encodeURIComponent(historyId) + 
-                    "&username=" + encodeURIComponent(await getName()) + 
-                    "&model=" + model+
-                    "&search="+search);
+                requestBody =
+                new Request('/api/get', {
+                    method: 'post',
+                    headers: {
+                        'Content-Type': 'application/json;charset=utf-8;'
+                    },
+                    body: JSON.stringify({
+                    "user": encodeURIComponent(userInput), 
+                    "system": encodeURIComponent(sysPrompt), 
+                    "temp": temp, 
+                    "hisid": encodeURIComponent(historyId), 
+                    "username": encodeURIComponent(await getName()), 
+                    "model": model,
+                    "search": search
+                })
+                })
+                const response = await fetch(requestBody)
                 return response;
             } catch (error) {
                 console.error("获取AI回复失败:", error);
@@ -285,7 +290,6 @@
                 alert("读取历史记录时发生错误");
             }
         }
-        
         // 处理用户请求
         async function handle(isinternet) {
             const userInput = getUserInput();
