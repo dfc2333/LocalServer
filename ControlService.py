@@ -52,8 +52,9 @@ def llog():
 def end():
     os._exit(0)
 
-def changeip(mode):
-    if verifier(str(request.args.get('p')))!=2: return "Illegal request", 404
+def changeip(mode,ip='',username='',self_call=False):
+    if not self_call:
+        if verifier(str(request.args.get('p')))!=2: return "Illegal request", 404
     ip=request.args.get('ip')
     username=request.args.get('username')
     if not ip:

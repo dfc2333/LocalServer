@@ -78,7 +78,7 @@ class ThreadSafeGlobal:
 
 
 serverStatus = ThreadSafeGlobal()
-serverStatus.set_value(0)        # 0: 默认暂停服务, 1: 默认开启服务
+serverStatus.set_value(1)        # 0: 默认暂停服务, 1: 默认开启服务
 userlist = ThreadSafeGlobal()
 userlist.set_value(dict())
 
@@ -139,7 +139,7 @@ with open(os.path.join(root, "userlist.txt"), "r", encoding='utf-8') as f:
 def load_userlist():
     global userlist
     with open(os.path.join(root, "userlist.txt"), "r", encoding='utf-8') as f:
-        userlist = dict()
+        userlist = ThreadSafeGlobal(dict())
         for line in f.readlines():
             if line.strip():
                 try:

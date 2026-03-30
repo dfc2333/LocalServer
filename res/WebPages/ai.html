@@ -111,6 +111,26 @@
                     </button>
                 </div>
             </div>
+            <!-- 修改对话内容弹窗 -->
+            <div class="popup-overlay" id="editOverlay" onclick="exitEditing()"></div>
+            <div class="settings-popup" id="editPopup">
+                <div class="popup-header">
+                    <div class="popup-title">
+                        <span class="status-indicator"></span> 编辑消息
+                    </div>
+                    <button class="popup-close-btn" onclick="exitEditing()">&times;</button>
+                </div>
+                
+                <div class="input-group">
+                    <label for="sysprompt">系统提示词（角色设定，一个对话只能设置一次）</label>
+                    <textarea id="msgContent"></textarea>
+                </div>
+                <div class="button-group">
+                    <button class="close-popup" onclick="saveEditing()">
+                        保存修改
+                    </button>
+                </div>
+            </div>
             
             <!-- 设置摘要 -->
             <div class="settings-compact">
@@ -125,7 +145,8 @@
                     </button>
                 </div>
                 <div class="tip">
-                    <p>点击"修改设置"调整AI模型、温度参数和系统提示词。</p>
+                    <p>点击"修改设置"调整AI模型、温度参数和系统提示词。
+现在修改删除重试都不能用，只有停止能用</p>
                 </div>
                 <div class="input-group">
                     <label for="hisid">历史记录名称</label>
@@ -149,7 +170,7 @@
         // 检查用户名
         async function getName() {
             try {
-                const response = await fetch("/api/getname");
+                const response = await fetch("/getname");
                 if (!response.ok) {
                     throw new Error("获取用户名失败");
                 }
@@ -181,7 +202,9 @@
                 return null;
             }
         }
-        async function editHistory()
+        async function editHistory(){
+
+        }
         // 获取AI回复
         async function getReply(search) {
             const userInput = getUserInput();
@@ -198,11 +221,10 @@
                         'Content-Type': 'application/json;charset=utf-8;'
                     },
                     body: JSON.stringify({
-                    "user": encodeURIComponent(userInput), 
-                    "system": encodeURIComponent(sysPrompt), 
+                    "user": userInput, 
+                    "system": sysPrompt, 
                     "temp": temp, 
-                    "hisid": encodeURIComponent(historyId), 
-                    "username": encodeURIComponent(await getName()), 
+                    "hisid": historyId, 
                     "model": model,
                     "search": search
                 })
@@ -249,7 +271,7 @@
                     return;
                 }
                 
-                const historyData = await historyResponse.json();
+                historyData = await historyResponse.json();
                 const historyElement = document.getElementById('history');
                 historyElement.innerHTML = '';
                 
@@ -258,18 +280,38 @@
                     return;
                 }
                 
-                historyData.forEach(item => {
+                rendermessages(historyData, historyElement);
+                
+            } catch (error) {
+                console.error("刷新历史记录失败:", error);
+                alert("读取历史记录时发生错误");
+            }
+        }
+        function rendermessages(historyData, historyElement){
+                    historyData.forEach(item => {
                     let messageElement = document.createElement('div');
                     if (item.role === 'user') {
                         messageElement.className = 'user-message';
                         messageElement.innerHTML = `
-                            <div class="message-header">用户:</div>
-                            <div class="message-content">${renderContent(item.content)}</div>
-                        `;
+                        <div class="message-header">用户:
+                            <div style="margin-left:auto; display:flex; flex-direction:row; ">
+                                <button class="msgButton" onclick="retryMessage(${item.id})">重试</button>
+                                <button class="msgButton" onclick="deleteMessage(this, ${item.id})">删除</button>
+                                <button class="msgButton" onclick="editMessage(this, ${item.id})">编辑</button>
+                            </div>
+                        </div>
+                        <div class="message-content">${renderContent(item.content)}</div>
+                    `;
                     } else if (item.role === 'assistant') {
                         messageElement.className = 'assistant-message';
                         messageElement.innerHTML = `
-                            <div class="message-header">AI助手:</div>
+                            <div class="message-header">AI助手:
+                                <div style="margin-left:auto; display:flex; flex-direction:row; ">
+                                    <button class="msgButton" onclick="retryMessage(${item.id})">重试</button>
+                                    <button class="msgButton" onclick="deleteMessage(this, ${item.id})">删除</button>
+                                    <button class="msgButton" onclick="editMessage(this, ${item.id})">编辑</button>
+                                </div>
+                            </div>
                             <div class="message-content">${renderContent(item.content)}</div>
                         `;
                     } else if (item.role === 'system') {
@@ -283,13 +325,9 @@
                 historyElement.scrollTop = historyElement.scrollHeight;
                 
                 // 重新渲染数学公式
-                MathJax.typesetPromise();
-                
-            } catch (error) {
-                console.error("刷新历史记录失败:", error);
-                alert("读取历史记录时发生错误");
-            }
-        }
+                MathJax.typesetPromise();}
+
+        currentStreamController = null;
         // 处理用户请求
         async function handle(isinternet) {
             const userInput = getUserInput();
@@ -309,7 +347,13 @@
             const userMessageElement = document.createElement('div');
             userMessageElement.className = 'user-message';
             userMessageElement.innerHTML = `
-                <div class="message-header">用户:</div>
+                <div class="message-header">用户:
+                    <div style="margin-left:auto; display:flex; flex-direction:row; ">
+                        <button class="msgButton" onclick="retryMessage(this)">重试</button>
+                        <button class="msgButton" onclick="deleteMessage(this)">删除</button>
+                        <button class="msgButton" onclick="editMessage(this)">编辑</button>
+                    </div>
+                </div>
                 <div class="message-content">${renderContent(userInput)}</div>
             `;
             historyElement.appendChild(userMessageElement);
@@ -318,47 +362,172 @@
             const loadingElement = document.createElement('div');
             loadingElement.className = 'assistant-message';
             loadingElement.innerHTML = `
-                <div class="message-header">AI助手:</div>
+                <div class="message-header">AI助手:
+                    <div style="margin-left:auto; display:flex; flex-direction:row; ">
+                        <button class="msgButton" onclick="retryMessage(this)">重试</button>
+                        <button class="msgButton" onclick="deleteMessage(this)">删除</button>
+                        <button class="msgButton" onclick="editMessage(this)">编辑</button>
+                        <button class="msgButton" onclick="stopStream()">停止</button>
+                    </div>
+                </div>
                 <div class="message-content">思考中...</div>
             `;
             historyElement.appendChild(loadingElement);
             
             // 滚动到底部
             historyElement.scrollTop = historyElement.scrollHeight;
-            
-            try {
-                // 获取AI回复
-                const aiReply = await getReply(isinternet);
-
-                const replyContent = await aiReply.text()
-
-                if (!aiReply || !aiReply.ok) {
-                    loadingElement.innerHTML = `
-                        <div class="message-header">AI助手:</div>
-                        <div class="message-content">获取回复失败，以下是一些信息：${replyContent}</div>
-                    `;
-                    throw new Error("获取AI回复失败");
-                }
-                
-                // 更新AI回复
-                loadingElement.innerHTML = `
-                    <div class="message-header">AI助手:</div>
-                    <div class="message-content">${renderContent(replyContent)}</div>
-                `;
-                
-                // 更新余额
-                await updateMoney();
-                
-            } catch (error) {
-                console.error("处理请求失败:", error);
-                if (loadingElement.innerHTML.includes("思考中")) {
-                    loadingElement.innerHTML = `
-                        <div class="message-header">AI助手:</div>
-                        <div class="message-content">请求处理失败，错误: ${error.message}</div>
-                    `;
-                }
+            // 如果有正在进行的请求，先停止（可选，根据需求决定）
+            if (currentStreamController) {
+                currentStreamController.abort();
             }
-            
+
+            currentStreamController = new AbortController();
+            const signal = currentStreamController.signal;
+            const sysPrompt = getSysPrompt();
+            const temp = document.getElementById("temp").value;
+            const historyId = getHistoryid();
+            const model = document.getElementById("model").value;
+            // 准备请求数据（假设这些变量已在外部定义）
+            const requestData = {
+                    "user": userInput, 
+                    "system": sysPrompt, 
+                    "temp": temp, 
+                    "hisid": historyId, 
+                    "model": model,
+                    "search": isinternet
+                };
+
+            try {
+                // 发起流式请求
+                const response = await fetch('/api/get', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestData),
+                    signal: signal
+                });
+
+                if (!response.ok) {
+                    // 尝试读取错误信息
+                    const errorText = await response.text();
+                    loadingElement.innerHTML = `
+                        <div class="message-header">AI助手:
+                    <div style="margin-left:auto; display:flex; flex-direction:row; ">
+                        <button class="msgButton" onclick="retryMessage(this)">重试</button>
+                        <button class="msgButton" onclick="deleteMessage(this)">删除</button>
+                        <button class="msgButton" onclick="editMessage(this)">编辑</button>
+                        <button class="msgButton" onclick="stopStream()">停止</button>
+                    </div>
+                </div>
+                        <div class="message-content">获取回复失败，状态码：${response.status}<br>${errorText}</div>
+                    `;
+                    throw new Error(`请求失败 (${response.status})`);
+                }
+
+                // 初始化显示区域（清空“思考中”）
+                loadingElement.innerHTML = `
+                    <div class="message-header">AI助手:
+                    <div style="margin-left:auto; display:flex; flex-direction:row; ">
+                        <button class="msgButton" onclick="retryMessage(this)">重试</button>
+                        <button class="msgButton" onclick="deleteMessage(this)">删除</button>
+                        <button class="msgButton" onclick="editMessage(this)">编辑</button>
+                        <button class="msgButton" onclick="stopStream()">停止</button>
+                    </div>
+                </div>
+                    <div class="message-content"></div>
+                `;
+                const contentDiv = loadingElement.querySelector('.message-content');
+                let receivedText = '';
+
+                // 读取流式数据
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder('utf-8');
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    // 解码数据块
+                    const chunk = decoder.decode(value, { stream: true });
+                    receivedText += chunk;
+                    // 实时渲染（支持 Markdown 等）
+                    contentDiv.innerHTML = renderContent(receivedText);
+                }
+
+                // 流式结束，更新余额（原来在获取回复后调用的逻辑）
+                await updateMoney();
+
+            } catch (error) {
+                // 处理取消错误
+                if (error.name === 'AbortError') {
+                    console.log('用户停止了生成');
+                    // 可选：在内容区显示停止提示
+                    if (loadingElement && loadingElement.innerHTML.includes('思考中')) {
+                        loadingElement.innerHTML = `
+                            <div class="message-header">AI助手:
+                    <div style="margin-left:auto; display:flex; flex-direction:row; ">
+                        <button class="msgButton" onclick="retryMessage(this)">重试</button>
+                        <button class="msgButton" onclick="deleteMessage(this)">删除</button>
+                        <button class="msgButton" onclick="editMessage(this)">编辑</button>
+                        <button class="msgButton" onclick="stopStream()">停止</button>
+                    </div>
+                </div>
+                            <div class="message-content">生成已停止。</div>
+                        `;
+                    } else {
+                        // 如果已经有内容，追加停止提示（不覆盖已有内容）
+                        const contentDiv = loadingElement.querySelector('.message-content');
+                        if (contentDiv) {
+                            contentDiv.innerHTML += '<div style="color: gray;">\n\n[生成已停止]</div>';
+                        } else {
+                            loadingElement.innerHTML = `
+                                <div class="message-header">AI助手:
+                    <div style="margin-left:auto; display:flex; flex-direction:row; ">
+                        <button class="msgButton" onclick="retryMessage(this)">重试</button>
+                        <button class="msgButton" onclick="deleteMessage(this)">删除</button>
+                        <button class="msgButton" onclick="editMessage(this)">编辑</button>
+                        <button class="msgButton" onclick="stopStream()">停止</button>
+                    </div>
+                </div>
+                                <div class="message-content">生成已停止。</div>
+                            `;
+                        }
+                    }
+                } else {
+                    console.error('处理请求失败:', error);
+                    // 原有的错误处理逻辑
+                    if (loadingElement.innerHTML.includes('思考中')) {
+                        loadingElement.innerHTML = `
+                            <div class="message-header">AI助手:
+                    <div style="margin-left:auto; display:flex; flex-direction:row; ">
+                        <button class="msgButton" onclick="retryMessage(this)">重试</button>
+                        <button class="msgButton" onclick="deleteMessage(this)">删除</button>
+                        <button class="msgButton" onclick="editMessage(this)">编辑</button>
+                        <button class="msgButton" onclick="stopStream()">停止</button>
+                    </div>
+                </div>
+                            <div class="message-content">请求处理失败，错误: ${error.message}</div>
+                        `;
+                    } else {
+                        // 已有内容时，追加错误提示
+                        const contentDiv = loadingElement.querySelector('.message-content');
+                        if (contentDiv) {
+                            contentDiv.innerHTML += `<div style="color: red;">\n\n[错误: ${error.message}]</div>`;
+                        }
+                    }
+                }
+            } finally {
+                // 清空当前控制器，允许下一次请求
+                currentStreamController = null;
+            }
+}
+
+// 停止生成的函数，供按钮调用
+function stopStream() {
+    if (currentStreamController) {
+        currentStreamController.abort();
+    }
+
+
             // 重新渲染数学公式
             MathJax.typesetPromise();
             
@@ -374,7 +543,7 @@
         // 获取余额
         async function getMoney() {
             try {
-                const response = await fetch("/api/getmoney?username=" + encodeURIComponent(getName()));
+                const response = await fetch("/api/getmoney?username=" + encodeURIComponent(await getName()));
                 if (!response.ok) {
                     throw new Error("获取余额失败");
                 }
@@ -408,6 +577,17 @@
             
             // 更新设置摘要
             updateSettingsSummary();
+        }
+        // 打开编辑弹窗
+        function openEditing() {
+            document.getElementById('editPopup').classList.add('active');
+            document.getElementById('editOverlay').classList.add('active');
+        }
+        
+        // 关闭编辑弹窗
+        function exitEditing() {
+            document.getElementById('editPopup').classList.remove('active');
+            document.getElementById('editOverlay').classList.remove('active');
         }
         
         // 更新设置摘要

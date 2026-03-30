@@ -18,8 +18,8 @@ def talker_ws():
     """Serve WebSocket version of talk page"""
     # For now, serve the same HTML but we'll create a separate version later
     # that uses WebSocket instead of HTTP polling
-    from tools import WSAvaliable
-    return WSAvaliable('talk_ws.html')
+    from tools import WSavailable
+    return WSavailable('talk_ws.html')
 
 def init_socketio(app):
     """Initialize SocketIO with the Flask app"""
@@ -63,19 +63,11 @@ def is_user_in_group(username, group_name):
         return False
     return username in group.get('members', [])
 
-def get_username_from_request():
-    """Get username from request (for WebSocket connections)"""
-    # For WebSocket, we need to get username differently
-    # In HTTP requests, it's from request.remote_addr
-    # For WebSocket, we might need to pass it as a query parameter or in session
-    # For now, use a placeholder - will need to implement proper auth
-    return "anonymous"
-
 def get_message_file_path(user, target, key='default'):
     """Determine the message file path based on user and target"""
     if not target:
         # Public chat
-        return f'msg{date}.json'
+        return f'msg_public.json'
     elif is_group_target(target):
         # Group chat
         group_name = get_group_name(target)
@@ -274,9 +266,10 @@ def register_socketio_events(socketio_instance=None):
         save_messages(file_path, messages, key)
         
         # Broadcast to room (users currently in this chat)
-        emit('new_message', {
+        emit('new_Message', {
             'message': new_message,
-            'target': target
+            'target': target,
+            'from': username
         }, room=room)
         
         # --- 新增：向相关用户发送小红点通知 (other_new_message) ---

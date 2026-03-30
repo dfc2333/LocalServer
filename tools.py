@@ -1,14 +1,23 @@
-import requests, os, json
-from config import *
-from flask import request, send_from_directory, redirect
-from typing import Dict, Any
+import os
+import json 
 import os
 import hashlib
-from typing import Union, Optional
 import secrets
+from typing import (Union, 
+                    Optional, 
+                    Dict, 
+                    Any)
+
+import requests
+from flask import (request, 
+                   send_from_directory, 
+                   redirect)
+
+from config import *
+
 
 class FastXORCipher:
-    """高性能XOR加密器，支持自定义长度密钥"""
+    """XOR加密器，支持自定义长度密钥"""
     
     def __init__(self,key: Union[str, bytes]=''):
         if not key:
@@ -58,8 +67,7 @@ class FastXORCipher:
         data_array = bytearray(data)
         key_array = bytearray(self.key)
         
-        # 使用简单的循环进行XOR操作（性能优先）
-        # 这里使用while循环通常比for循环稍快
+        # 进行XOR
         i = 0
         length = len(data_array)
         while i < length:
@@ -133,25 +141,22 @@ def verifier(passwordgiven='', ip=''):
         
 def list_files():
     try:
-        filesL = os.listdir(loc_dir)
-        filesN = os.listdir(net_dir+'/bili')
+        dir=request.args.get('d',"downloaded/local")
+        filesL = os.listdir(os.path.join(root, dir))
+
     except FileNotFoundError:
+        print(f"Directory not found: {root} to {os.path.join(root, dir)}")
         return "No such directory", 404
     except Exception as e:
         return f"Error: {str(e)}", 500
-    print(filesL,filesN)
-    html = """<h1>Avaliable files list:</h1>
-            <ul style="font-size: 1.2em; padding: 20px;">
-            <p>FilesL:</p>"""
+    html = """<h1>Files:</h1>
+            <ul style="font-size: 1.2em; padding: 20px;">"""
     for file in filesL:
-        file_path = os.path.join(loc_dir, file)
+        file_path = os.path.join(root, dir, file)
         if os.path.isfile(file_path):
-            html += f'<li><a href="/local/{file}">{file}</a></li>'
-    html += "<p>FilesN:</p><br/>"
-    for file in filesN:
-        file_path = os.path.join(net_dir+'/bili', file)
-        if os.path.isfile(file_path):
-            html += f'<li><a href="/net/bili/{file}">{file}</a></li>'
+            html += f'<li><a href="/files/{dir+"/"+file}">{file}</a></li>'
+        if os.path.isdir(file_path):
+            html += f'<li><a href="/?d={dir+"/"+file}">{file}</a></li>'
     html += "</ul>"
     return html
 
@@ -162,19 +167,8 @@ def OnlyAvailable():
     else:
         return False
 
-def VAAvaliable(filename,LorN=''):
+def WSAvailable(service):
     global serverStatus
-    if (not verifier(str(request.args.get('p')),str(request.remote_addr))) or \
-       (not serverStatus()) or \
-       ((not (filename.lower().endswith('.mp4') or filename.lower().endswith('.mov'))) if LorN=='L' else \
-       dot_checker(filename)):
-        return True
-    else:
-        return False
-
-def WSAvaliable(service):
-    global serverStatus
-    print(serverStatus())
     if (not verifier(str(request.args.get('p')),str(request.remote_addr))) or (not serverStatus()):
         print(serverStatus())
         return redirect("https://mx.j2inter.corn/faq")
@@ -195,7 +189,7 @@ def isVIP(username):
     except FileNotFoundError:
         return False
 
-def GameAvaliable(service):
+def GameAvailable(service):
     global serverStatus
     print(serverStatus())
     if (not verifier(str(request.args.get('p')),str(request.remote_addr))) or (not serverStatus()) or is_not_game_time():
@@ -205,9 +199,12 @@ def GameAvaliable(service):
             f.write(f'<html><head><title>{service} Missing</title></head><body><h1>{service} Not Found</h1><p>Please ensure that the {service} file exists in the WebPages directory.</p></body></html>')
     return send_from_directory(pages_dir, f'{service}')
 
-def change_userlist(mode,ip,username):
-    if verifier(str(request.args.get('p')))!=2: return "Illegal request", 404
+def change_userlist(mode,ip,username,self_call=False):
+    if not self_call:
+        if verifier(str(request.args.get('p')))!=2: return "Illegal request", 404
     global userlist
+    if username==" ":
+        username=""
     with open(os.path.join(root, "userlist.txt"), "w+",encoding='utf-8') as f:
         if mode == "add":
             userlist[ip] = username

@@ -249,6 +249,8 @@
         <header>
             <h1>Markdown + LaTeX 渲染器</h1>
             <p class="subtitle">使用 markdown-it 解析 Markdown 语法，MathJax 渲染 LaTeX 数学公式。在左侧编辑，右侧实时预览。</p>
+            <input type="text" id="filename_input" placeholder="filename">
+            <button id="file-btn">加载文件</button>
         </header>
         
         <div class="content">
@@ -256,7 +258,7 @@
                 <h2 class="section-title">
                     <span>编辑区</span>
                 </h2>
-                <textarea id="markdown-input" placeholder="在此输入Markdown文本和LaTeX数学公式..." ></textarea>
+                <textarea id="markdown-input" placeholder="在此输入Markdown文本和LaTeX数学公式..."></textarea>
                 <div class="controls">
                 <button id="render-btn">渲染 Markdown</button>
                 <button id="clear-btn">保存</button>
@@ -317,10 +319,18 @@
     }
     // 事件监听
     renderBtn.addEventListener('click', renderMarkdown);
-    
+    filebtn = document.getElementById('file-btn');
     clearBtn.addEventListener('click', function() {
+        
         const content = input.value;
-        fetch('/savereadme?content=' + encodeURIComponent(content))
+        req = new Request('/save?name=' + encodeURIComponent(document.getElementById('filename_input').value));
+        fetch(req, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({"content": content})
+        })
         .then(response => response.text())
         .then(data => {
             alert(data);
@@ -331,16 +341,17 @@
     });
     
     // 初始渲染
-
-    fetch('/getreadme').then(response => response.text()).then(data => {
+    filebtn.addEventListener('click', function() {
+        filename = document.getElementById('filename_input').value;
+    fetch('/read?name='+encodeURIComponent(filename)).then(response => response.text()).then(data => {
         input.value = data;
         renderMarkdown();
-    });
+    });});
     
     // 实时预览（可选，取消注释以启用）
-    input.addEventListener('input', function() {
-    renderMarkdown();
-    });
+    //input.addEventListener('input', function() {
+    //renderMarkdown();
+    //});
 </script>
 </body>
 </html>

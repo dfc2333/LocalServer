@@ -5,7 +5,7 @@ from flask import request
 from config import date, message_dir
 from tools import (
     userlist,
-    WSAvaliable as avaliable,
+    WSAvailable as available,
     KeyDecoder
 )
 
@@ -148,7 +148,7 @@ def announce():
             return f.read()
 
 def talker():
-    return avaliable('talk.html')
+    return available('talk.html')
 
 # 群聊管理函数
 def create_group():
