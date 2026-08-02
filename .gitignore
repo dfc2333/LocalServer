@@ -1,6 +1,31 @@
+# Byte-compiled / optimized / DLL files
 __pycache__/
-downloaded/local/
-messages/
-logs/
+
+# Virtual environment
 .venv/
+venv/
+env/
+.venv*/
+venv*/
+
+# IDE / editor
+.vscode/
+.idea/
 .*/
+
+# Runtime data directories (user-generated content, chats, logs)
+logs/
+messages/
+pics/
+downloaded/
+
+# Archive / temp files
+*.zip
+
+# Sensitive runtime files
+.admin_password
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
