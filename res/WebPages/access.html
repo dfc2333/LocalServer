@@ -1,0 +1,22 @@
+<html><head><script>
+(async function(){const a = await (await fetch("/ispass")).json();
+if (!a.ispass){
+window.location.replace("/jump")
+}})()
+async function isPassRight(){
+pass=document.getElementById("pass_input").value
+const r=await (await fetch("/api/verifypass",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({password:pass})
+})).json()
+if (r.isRight){
+window.location.replace("/jump")
+}
+}
+</script>
+</head>
+<body>
+<input type="password" id="pass_input"/><button onclick="isPassRight()">go</button>
+</body>
+</html>

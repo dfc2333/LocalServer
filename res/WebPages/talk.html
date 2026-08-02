@@ -333,6 +333,23 @@
             background: #f1f5f9;
             border-color: #94a3b8;
         }
+        .quote-panel {
+            background: #fef9e7;
+            border-radius: 16px;
+            padding: 12px;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+        }
+        .quote-button {
+            background: #dfcdfc;
+            color: black;
+            border: none;
+            border-radius: 10px;
+            padding: 4px 12px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            cursor: pointer;
+        }
 
         /* 右侧状态卡片 */
         .status-bar {
@@ -483,11 +500,13 @@
                 </div>
             </div>
 
-            <!-- 输入面板 -->
-            <div class='input-panel' style="display: flex;">
-                    <input type='text' id='content' placeholder='输入要发送的消息...' style='flex: 10'>
-                    <input type='text' id='key' placeholder='密钥' style='flex: 2;'>
-                    <button id='sendButton' class='primary-btn' style="flex: 1;">发送</button>
+            <div class="quote-panel" id="quote" style="display: none;"></div>
+            <div class='input-panel' style="display: flex; align-items: center;">
+                <input type='text' id='content' placeholder='输入要发送的消息...' style='flex: 10'>
+                <input type='text' id='key' placeholder='密钥' style='flex: 2;'>
+                <button id='uploadBtn' class='secondary-btn' title='上传图片' style='flex: 0 0 44px; width:44px; height:44px; padding:0; display:flex; align-items:center; justify-content:center; border-radius:50%; font-size:1.2rem;'>🖼️</button>
+                <input type='file' id='fileInput' accept='image/*' style='display:none'>
+                <button id='sendButton' class='primary-btn' style="flex: 1;">发送</button>
             </div>
         </div>
 
@@ -521,6 +540,7 @@
                 <div class='control-buttons'>
                     <div>
                         <button id='joinButton' class='secondary-btn'>➕ 加入聊天</button>
+                        <button id='joinPublic' class='secondary-btn' onclick="joinPublicChat()">大群</button>
                         <div style='flex: 2;'>
                             <input type='text' id='user' placeholder='用户名 或 @群聊名 (留空公共聊天)'>
                         </div>
@@ -551,29 +571,29 @@
 
 <script>
     (function() {
-        // --- 原有全局变量 ---
         let socket = null;
         let currentUsername = '';
         let currentTarget = '';
         let currentKey = 'default';
         let currentRoom = '';
-        let messages = []; // Store messages with indices for deletion
+        let currentQuoteId = null;
+        let messages = [];
 
-        let privateChatList = []; // 存储对象 { name, redSpotStatus }
+        let privateChatList = []; // object { name, redSpotStatus }
         const STORAGE_KEY = 'privateChatNames';
 
-        // --- 加载私聊列表（兼容旧版字符串数组）---
+        // #region Private Chat related
+
         function loadPrivateChats() {
             try {
                 const stored = localStorage.getItem(STORAGE_KEY);
                 if (stored) {
                     const parsed = JSON.parse(stored);
                     if (Array.isArray(parsed)) {
-                        // 如果是字符串数组，转换为对象数组
                         if (parsed.length > 0 && typeof parsed[0] === 'string') {
                             privateChatList = parsed.map(name => ({ name, redSpotStatus: false }));
                         } else {
-                            // 已经是对象数组，确保每个对象都有 redSpotStatus 字段
+                            // ensure redSpotStatus exist
                             privateChatList = parsed.map(item => {
                                 if (typeof item === 'object' && item !== null) {
                                     return { name: item.name, redSpotStatus: item.redSpotStatus || false };
@@ -592,17 +612,16 @@
                 console.warn('读取私聊记录失败', e);
                 privateChatList = [];
             }
-            // 去重
+            // Deduplicate
             privateChatList = privateChatList.filter((item, index, self) => 
                 index === self.findIndex(t => t.name === item.name)
             );
             renderPrivateChatList();
         }
-
-        // --- 保存私聊列表到 localStorage ---
+        // --- save to localStorage ---
         function savePrivateChats() {
             try {
-                // 去重并保留最近20条
+                // Deduplicate and save only recent 20
                 privateChatList = privateChatList.filter((item, index, self) => 
                     index === self.findIndex(t => t.name === item.name)
                 ).slice(0, 20);
@@ -611,32 +630,29 @@
             renderPrivateChatList();
         }
 
-        // --- 添加一个私聊名字 (去重并移到最前) ---
         function addToPrivateChatList(name) {
             if (!name || typeof name !== 'string') return;
             if (name === '') return;
-
-            // 移除已存在的同名项
+            const existing = privateChatList.find(item => item.name === name);
+            const hasRedSpot = existing ? existing.redSpotStatus : false;
+            // remove
             privateChatList = privateChatList.filter(item => item.name !== name);
-            // 插入到开头，红点状态默认为 false（新添加的项没有未读消息）
-            privateChatList.unshift({ name, redSpotStatus: false });
+            // insert to the front
+            privateChatList.unshift({ name, redSpotStatus: hasRedSpot });
             savePrivateChats();
         }
 
-        // --- 从列表中移除指定名字 ---
         function removeFromPrivateChatList(chat) {
             const name = typeof chat === 'string' ? chat : chat.name;
             privateChatList = privateChatList.filter(item => item.name !== name);
             savePrivateChats();
         }
 
-        // --- 清空所有私聊记录 ---
         function clearPrivateChats() {
             privateChatList = [];
             savePrivateChats();
         }
 
-        // --- 设置指定聊天的红点状态 ---
         function setRedSpot(chat, hasRedSpot) {
             const name = typeof chat === 'string' ? chat : chat.name;
             const item = privateChatList.find(i => i.name === name);
@@ -646,7 +662,6 @@
             }
         }
 
-        // --- 渲染私聊列表UI ---
         function renderPrivateChatList() {
             const container = document.getElementById('privateChatList');
             if (!container) return;
@@ -663,7 +678,6 @@
                 nameSpan.className = 'private-name';
                 nameSpan.textContent = chat.name;
 
-                // 小红点
                 if (chat.redSpotStatus) {
                     const spot = document.createElement('span');
                     spot.className = 'little-red-spot';
@@ -682,19 +696,18 @@
                 item.appendChild(nameSpan);
                 item.appendChild(delBtn);
 
-                // 点击整个项：填充输入框并自动加入聊天，同时清除小红点
                 item.addEventListener('click', () => {
                     document.getElementById('user').value = chat.name;
-                    // 清除小红点
                     setRedSpot(chat, false);
-                    joinCurrentChat();  // 调用原有的加入函数
+                    joinCurrentChat();
                 });
 
                 container.appendChild(item);
             });
         }
+        
 
-        // --- 初始化 ---
+        // --- init ---
         document.addEventListener('DOMContentLoaded', function() {
             loadPrivateChats();
             document.getElementById('clearPrivateChats').addEventListener('click', () => {
@@ -706,6 +719,7 @@
             setupEventListeners();
             loadAnnouncement();
         });
+        // #endregion
 
         function initializeConnection() {
             socket = io();
@@ -723,7 +737,6 @@
                 if (data.username) {
                     currentUsername = data.username;
                     document.getElementById('usernameDisplay').textContent = `用户: ${currentUsername}`;
-                    // 自动加入公共聊天（可选）
                     joinCurrentChat();
                 }
             });
@@ -745,7 +758,6 @@
                     currentUsername = data.username;
                     document.getElementById('usernameDisplay').textContent = `用户: ${currentUsername}`;
                 }
-                // 加入成功后，将当前目标添加到私聊列表（但不带红点）
                 if (data.target) {
                     addToPrivateChatList(data.target);
                 }
@@ -764,25 +776,23 @@
             });
 
             socket.on('new_Message', function(data) {
-                // 仅当消息的目标与当前正在查看的目标一致时才显示
                 console.log('收到新消息通知', data);
                 if (data.target === currentTarget || data.from === currentTarget) {
                     messages.push(data.message);
                     addMessageToUI(data.message);
                 } else {
-                // 其他聊天的消息只触发小红点，不显示内容
                 console.log('收到其他聊天的消息，已忽略显示', data.target);
                 }
             });
 
             socket.on('message_deleted', function(data) {
-                removeMessageFromUI(data.index);
-                if (data.index >= 0 && data.index < messages.length) {
+                const deletedId = data.message_id;
+                if (deletedId !== undefined && deletedId !== null) {
+                    messages = messages.filter(msg => msg.id !== deletedId);
+                } else if (typeof data.index === 'number' && data.index >= 0 && data.index < messages.length) {
                     messages.splice(data.index, 1);
-                    for (let i = 0; i < messages.length; i++) {
-                        messages[i].id = i;
-                    }
                 }
+                renderMessages(messages);
             });
 
             socket.on('error', function(data) {
@@ -791,6 +801,9 @@
 
             socket.on('message_sent', function(data) {
                 document.getElementById('content').value = '';
+                currentQuoteId = null;
+                document.getElementById('quote').innerHTML = '';
+                document.getElementById('quote').style.display = 'none';
             });
 
             socket.on('delete_success', function(data) {});
@@ -800,25 +813,17 @@
                 alert(`群聊 "${data.group_name}" 创建成功！\n访问密钥: ${accessKey}\n\n请记下此密钥，其他人需要此密钥才能加入群聊。`);
             });
 
-            // --- 新增：处理其他用户发来的新消息通知（小红点）---
             socket.on('other_new_message', function(data) {
-                // data.target 可能是用户名（私聊）或 @群名（群聊）
                 const target = data.target;
                 if (!target) return;
-
-                // 查找是否已存在于私聊列表
                 const existing = privateChatList.find(item => item.name === target);
                 if (existing) {
-                    // 已存在，设置红点为 true
                     existing.redSpotStatus = true;
                 } else {
-                    // 不存在，添加新项并设置红点
                     privateChatList.unshift({ name: target, redSpotStatus: true });
-                    // 限制长度
                     if (privateChatList.length > 20) privateChatList.pop();
                 }
-                // 保存并重新渲染
-                savePrivateChats();  // save 中会调用 render
+                savePrivateChats();
             });
         }
 
@@ -832,6 +837,53 @@
             });
             document.getElementById('joinButton').addEventListener('click', joinCurrentChat);
             document.getElementById('createGroupButton').addEventListener('click', createGroup);
+            document.getElementById('uploadBtn').addEventListener('click', function() {
+                document.getElementById('fileInput').click();
+            });
+            document.getElementById('fileInput').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                if (file.size > 10 * 1024 * 1024) {
+                    showError('图片太大，请选择小于10MB的图片');
+                    this.value = '';
+                    return;
+                }
+
+                if (!socket.connected) {
+                    showError('未连接到服务器');
+                    this.value = '';
+                    return;
+                }
+                if (!currentRoom) {
+                    showError('请先加入一个聊天');
+                    this.value = '';
+                    return;
+                }
+
+                if (!file.type.startsWith('image/')) {
+                    showError('请选择图片文件');
+                    this.value = '';
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(ev) {
+                    socket.emit('upload_image', {
+                        data: ev.target.result,
+                        filename: file.name,
+                        target: currentTarget,
+                        key: currentKey,
+                        quote: currentQuoteId
+                    });
+                };
+                reader.onerror = function() {
+                    showError('读取文件失败');
+                };
+                reader.readAsDataURL(file);
+                // reset input
+                this.value = '';
+            });
         }
 
         function joinCurrentChat() {
@@ -863,6 +915,12 @@
             }
         }
 
+        function joinPublicChat() {
+            document.getElementById('user').value = '';
+            document.getElementById('key').value = '';
+            joinCurrentChat();
+        }
+
         function sendMessage() {
             if (!socket.connected) { showError('未连接到服务器'); return; }
             if (!currentRoom) { showError('请先加入一个聊天'); return; }
@@ -873,7 +931,8 @@
             socket.emit('send_message', {
                 content: content,
                 target: currentTarget,
-                key: currentKey
+                key: currentKey,
+                quote: currentQuoteId
             });
         }
 
@@ -885,75 +944,6 @@
             const groupKey = accessKey === null ? '' : accessKey;
 
             socket.emit('create_group', { name: groupName, access_key: groupKey });
-        }
-
-        function deleteMessage(index) {
-            if (!socket.connected) { showError('未连接到服务器'); return; }
-            if (!currentRoom) { showError('请先加入一个聊天'); return; }
-            if (index < 0 || index >= messages.length) { showError('无效的消息索引'); return; }
-            socket.emit('delete_message', { target: currentTarget, key: currentKey, index: index });
-        }
-
-        function renderMessages(msgArray) {
-            const container = document.getElementById('MsgBox');
-            container.innerHTML = '';
-            msgArray.forEach((msg, index) => container.appendChild(createMessageElement(msg, index)));
-            document.getElementById('end')?.scrollIntoView({ behavior: 'smooth' });
-        }
-
-        function addMessageToUI(message) {
-            const container = document.getElementById('MsgBox');
-            container.appendChild(createMessageElement(message, messages.length - 1));
-            document.getElementById('end')?.scrollIntoView({ behavior: 'smooth' });
-        }
-
-        function removeMessageFromUI(index) {
-            const container = document.getElementById('MsgBox');
-            const msgEl = container.querySelector(`[data-index="${index}"]`);
-            if (msgEl) {
-                msgEl.style.transition = 'opacity 0.3s';
-                msgEl.style.opacity = '0';
-                setTimeout(() => {
-                    msgEl.remove();
-                    renderMessages(messages);
-                }, 300);
-            }
-        }
-
-        function createMessageElement(message, index) {
-            const box = document.createElement('div');
-            box.className = 'message';
-            box.setAttribute('data-index', index);
-
-            if (message.sender === currentUsername) {
-                box.classList.add('user-message');
-                const deleteBtn = document.createElement('button');
-                deleteBtn.className = 'delete-btn';
-                deleteBtn.textContent = '撤回';
-                deleteBtn.onclick = () => deleteMessage(index);
-                box.appendChild(deleteBtn);
-            } else if (message.sender === 'system') {
-                box.classList.add('system-message');
-            } else {
-                box.classList.add('other-message');
-            }
-
-            const sender = document.createElement('div');
-            sender.className = 'message-header';
-            sender.textContent = `${message.sender}`;
-
-            const time = document.createElement('div');
-            time.className = 'message-time';
-            time.textContent = message.time;
-
-            const content = document.createElement('div');
-            content.className = 'message-content';
-            content.textContent = message.content;
-
-            box.appendChild(sender);
-            box.appendChild(time);
-            box.appendChild(content);
-            return box;
         }
 
         function loadAnnouncement() {
@@ -984,6 +974,154 @@
                 .catch(() => document.getElementById('ann').innerHTML = '<div class="no-announcement">暂无公告</div>');
         }
 
+        function Quote(messageId){
+            // 使用消息 ID 跟踪引用，避免撤回后失效。
+            currentQuoteId = messageId === null ? null : messageId;
+            const quotePanel = document.getElementById("quote");
+            if (!messageId) {
+                quotePanel.innerHTML = '';
+                quotePanel.style.display = 'none';
+                return;
+            }
+            const targetMsg = messages.find(msg => msg.id === messageId);
+            if (targetMsg) {
+                if (targetMsg.content && targetMsg.content.startsWith("ImageB64:")) {
+                    quotePanel.innerHTML = `引用消息: <img src="${targetMsg.content.replace("ImageB64:", "data:image/png;base64,")}" style="max-width:100px; max-height:100px;" alt="图片"> <button onclick="Quote(null)">取消引用</button>`;
+                    quotePanel.style.display = 'block';
+                    return;
+                } else if (targetMsg.content && targetMsg.content.startsWith("ImageURL:")) {
+                    quotePanel.innerHTML = `引用消息: <img src="${targetMsg.content.replace("ImageURL:", "")}" style="max-width:100px; max-height:100px;" alt="图片"> <button onclick="Quote(null)">取消引用</button>`;
+                    quotePanel.style.display = 'block';
+                    return;
+                }
+                quotePanel.innerHTML = `引用消息: ${targetMsg.content} <button onclick="Quote(null)">取消引用</button>`;
+                quotePanel.style.display = 'block';
+            }
+        }
+
+        function deleteMessage(messageId) {
+            if (!socket.connected) { showError('未连接到服务器'); return; }
+            if (!currentRoom) { showError('请先加入一个聊天'); return; }
+            if (!messageId) { showError('无效的消息标识'); return; }
+            socket.emit('delete_message', { target: currentTarget, key: currentKey, message_id: messageId });
+        }
+
+        function renderMessages(msgArray) {
+            const container = document.getElementById('MsgBox');
+            container.innerHTML = '';
+            msgArray.forEach((msg, index) => container.appendChild(createMessageElement(msg, index)));
+            document.getElementById('end')?.scrollIntoView();
+        }
+
+        function addMessageToUI(message) {
+            const container = document.getElementById('MsgBox');
+            container.appendChild(createMessageElement(message, messages.length - 1));
+            document.getElementById('end')?.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function removeMessageFromUI(index) {
+            const container = document.getElementById('MsgBox');
+            const msgEl = container.querySelector(`[data-index="${index}"]`);
+            if (msgEl) {
+                msgEl.style.transition = 'opacity 0.3s';
+                msgEl.style.opacity = '0';
+                setTimeout(() => {
+                    msgEl.remove();
+                    renderMessages(messages);
+                }, 300);
+            }
+        }
+
+        function createMessageElement(message, index) {
+            const box = document.createElement('div');
+            box.className = 'message';
+            box.setAttribute('data-index', index);
+            box.setAttribute('data-message-id', message.id);
+
+            const sender = document.createElement('div');
+            sender.className = 'message-header';
+            sender.textContent = `${message.sender}`;
+
+            const time = document.createElement('div');
+            time.className = 'message-time';
+            time.textContent = message.time;
+
+            let content;
+            if (message.content && message.content.startsWith("ImageB64:")) {
+                content = document.createElement('img');
+                content.src = message.content.replace("ImageB64:", "data:image/png;base64,");
+                content.style.maxWidth = '200px';
+                content.style.maxHeight = '200px';
+                content.alt = '图片';
+                content.loading = 'lazy';
+            } else if (message.content && message.content.startsWith("ImageURL:")) {
+                content = document.createElement('img');
+                content.src = message.content.replace("ImageURL:", "");
+                content.style.maxWidth = '200px';
+                content.style.maxHeight = '200px';
+                content.alt = '图片';
+                content.loading = 'lazy';
+            } else {
+                content = document.createElement('div');
+                content.className = 'message-content';
+                content.textContent = message.content || '';
+            }
+
+            if (message.quote !== undefined && message.quote !== null && message.quote !== '') {
+                const quoteMsg = messages.find(msg => msg.id === message.quote);
+                if (quoteMsg) {
+                    const quoteDiv = document.createElement('div');
+                    quoteDiv.className = 'quote-button';
+                    if (quoteMsg.content && (quoteMsg.content.startsWith("ImageB64:") || quoteMsg.content.startsWith("ImageURL:"))) {
+                        quoteDiv.innerHTML = `引用 ${quoteMsg.sender}: <img src="${quoteMsg.content.replace("ImageB64:", "data:image/png;base64:").replace("ImageURL:", "")}" style="max-width:100px; max-height:100px;" alt="图片" loading="lazy">`;
+                    } else {
+                    quoteDiv.textContent = `引用 ${quoteMsg.sender}: ${String(quoteMsg.content || '').slice(0, 30)}...`;}
+                    quoteDiv.onclick = () => {
+                        const targetEl = document.getElementById('MsgBox')?.querySelector(`[data-message-id="${message.quote}"]`);
+                        if (targetEl) {
+                            targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                    };
+                    box.appendChild(quoteDiv);
+                } else {
+                    const quoteDiv = document.createElement('div');
+                    quoteDiv.className = 'quote-button';
+                    quoteDiv.textContent = `引用消息已失效`;
+                    box.appendChild(quoteDiv);
+                }
+            }
+
+            const quoteBtn = document.createElement('button');
+            quoteBtn.textContent = '引用';
+            quoteBtn.className = 'quote-button';
+            quoteBtn.onclick = () => Quote(message.id);
+            box.appendChild(quoteBtn);
+
+            if (message.sender === currentUsername) {
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'delete-btn';
+                deleteBtn.textContent = '撤回';
+                deleteBtn.onclick = () => deleteMessage(message.id);
+                box.appendChild(deleteBtn);
+            }
+
+            // 按顺序添加所有元素
+            box.appendChild(sender);
+            box.appendChild(time);
+            box.appendChild(content);
+            
+            // 根据消息类型添加样式
+            if (message.sender === currentUsername) {
+                box.classList.add('user-message');
+            } else if (message.sender === 'system') {
+                box.classList.add('system-message');
+            } else {
+                box.classList.add('other-message');
+            }
+
+            return box;
+        }
+
         function showError(msg) {
             const err = document.getElementById('errorMessage');
             err.textContent = msg;
@@ -1001,6 +1139,28 @@
         // 把原有函数挂载到全局，确保事件调用有效
         window.deleteMessage = deleteMessage;
         window.joinCurrentChat = joinCurrentChat;
+        window.Quote = Quote;
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const img = entry.target;
+                    const src = img.dataset.src;
+                    if (src) {
+                        img.src = src;
+                        img.removeAttribute('data-src');
+                    }
+                    observer.unobserve(img);
+                }
+            });
+        }, {
+            root: document.getElementById('MsgBox'),
+            rootMargin: '100px'     // load pic 100px in advance
+        });
+
+        document.querySelectorAll('#messageContainer img[data-src]').forEach(img => {
+            observer.observe(img);
+        });
     })();
 </script>
 </body>
