@@ -1,0 +1,7 @@
+# userlist.example.txt — 用户白名单示例
+# 格式: IP:用户名[:sha256密码哈希]
+# 密码哈希为可选项，用于 /faq 入口的跳转密码验证
+
+127.0.0.1:admin
+192.168.1.100:username
+192.168.1.101:another_user:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855

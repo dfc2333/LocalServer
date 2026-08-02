@@ -1,0 +1,32 @@
+<html><head><script>
+async function setPass(){
+  pwd=document.getElementById("pass_input").value
+  pwd2=document.getElementById("pass_confirm").value
+  if (pwd!=pwd2){
+    alert("两次密码不一致")
+    return
+  }
+  if (pwd.length<1){
+    alert("密码不能为空")
+    return
+  }
+  const r=await (await fetch("/api/setpass",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({password:pwd})
+  })).json()
+  if (r.success){
+    alert("密码设置成功！")
+    window.location.replace("/jump")
+  }else{
+    alert("设置失败："+(r.error||"未知错误"))
+  }
+}
+</script>
+</head>
+<body>
+<input id="pass_input" type="password" placeholder="设置密码"/><br>
+<input id="pass_confirm" type="password" placeholder="确认密码"/><br>
+<button onclick="setPass()">确认</button>
+</body>
+</html>

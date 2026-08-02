@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LocalServer 管理面板</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0f0f1a; color: #e0e0e0; min-height: 100vh; }
+.login-container { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+.login-box { background: #1a1a2e; padding: 40px; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.3); text-align: center; min-width: 320px; }
+.login-box h1 { margin-bottom: 24px; font-size: 24px; color: #00d4ff; }
+.login-box input { width: 100%; padding: 12px 16px; background: #16213e; border: 1px solid #0f3460; border-radius: 8px; color: #e0e0e0; font-size: 16px; margin-bottom: 16px; outline: none; }
+.login-box input:focus { border-color: #00d4ff; }
+.login-box button { width: 100%; padding: 12px; background: linear-gradient(135deg, #00d4ff, #0f3460); border: none; border-radius: 8px; color: white; font-size: 16px; cursor: pointer; }
+.login-box button:hover { opacity: 0.9; }
+.login-box .error { color: #ff6b6b; margin-top: 12px; font-size: 14px; }
+.app { display: none; padding: 24px; max-width: 1400px; margin: 0 auto; }
+.app-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; padding: 16px 24px; background: #1a1a2e; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.2); }
+.app-header h1 { font-size: 20px; color: #00d4ff; }
+.app-header .user-info { font-size: 14px; color: #888; }
+.app-header .logout-btn { padding: 6px 16px; background: #ff4757; border: none; border-radius: 6px; color: white; cursor: pointer; font-size: 13px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 16px; }
+.card { background: #1a1a2e; border-radius: 12px; padding: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.2); }
+.card h2 { font-size: 16px; margin-bottom: 16px; color: #00d4ff; border-bottom: 1px solid #0f3460; padding-bottom: 8px; }
+.card-full { grid-column: 1 / -1; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #0f3460; }
+th { color: #00d4ff; font-weight: 600; background: #16213e; }
+td input { background: #16213e; border: 1px solid #0f3460; border-radius: 4px; color: #e0e0e0; padding: 4px 8px; width: 100%; font-size: 13px; }
+td input:focus { border-color: #00d4ff; outline: none; }
+.btn { display: inline-block; padding: 6px 14px; background: linear-gradient(135deg, #00d4ff, #0f3460); border: none; border-radius: 6px; color: white; cursor: pointer; font-size: 12px; margin: 2px; }
+.btn-sm { padding: 4px 10px; font-size: 11px; }
+.btn-danger { background: linear-gradient(135deg, #ff4757, #c0392b); }
+.btn-success { background: linear-gradient(135deg, #2ed573, #1e8a3e); }
+.btn-warning { background: linear-gradient(135deg, #ffa502, #c07a02); }
+.btn:hover { opacity: 0.85; }
+.toggle { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; margin: 6px 12px 6px 0; }
+.toggle input { display: none; }
+.toggle .slider { width: 44px; height: 24px; background: #333; border-radius: 12px; position: relative; transition: 0.3s; }
+.toggle .slider::after { content: ''; width: 20px; height: 20px; background: #888; border-radius: 50%; position: absolute; top: 2px; left: 2px; transition: 0.3s; }
+.toggle input:checked + .slider { background: #00d4ff; }
+.toggle input:checked + .slider::after { left: 22px; background: white; }
+.status-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+.status-on { background: #2ed573; color: #fff; }
+.status-off { background: #ff4757; color: #fff; }
+.label { font-size: 12px; color: #888; margin-bottom: 4px; }
+.inline-flex { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.mt-8 { margin-top: 8px; }
+.mb-8 { margin-bottom: 8px; }
+.flex-between { display: flex; justify-content: space-between; align-items: center; }
+.search-input { background: #16213e; border: 1px solid #0f3460; border-radius: 6px; color: #e0e0e0; padding: 8px 12px; font-size: 13px; outline: none; }
+.search-input:focus { border-color: #00d4ff; }
+.pagination { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 12px; }
+.pagination button { padding: 4px 12px; background: #16213e; border: 1px solid #0f3460; border-radius: 4px; color: #e0e0e0; cursor: pointer; }
+.pagination button:hover { background: #0f3460; }
+.pagination .active { background: #00d4ff; color: #fff; }
+.pagination span { font-size: 13px; color: #888; }
+.sort-select { background: #16213e; border: 1px solid #0f3460; border-radius: 6px; color: #e0e0e0; padding: 6px 10px; font-size: 13px; outline: none; }
+.sort-select:focus { border-color: #00d4ff; }
+pre { background: #16213e; padding: 12px; border-radius: 8px; overflow-x: auto; font-size: 12px; max-height: 300px; overflow-y: auto; }
+.tabs { display: flex; gap: 4px; margin-bottom: 12px; }
+.tab { padding: 6px 16px; background: #16213e; border: none; border-radius: 6px 6px 0 0; color: #888; cursor: pointer; font-size: 13px; }
+.tab.active { background: #0f3460; color: #00d4ff; }
+.content-section { display: none; }
+.content-section.active { display: block; }
+.empty-state { text-align: center; padding: 40px 20px; color: #666; }
+.empty-state i { font-size: 48px; margin-bottom: 12px; }
+.time-input { background: #16213e; border: 1px solid #0f3460; border-radius: 4px; color: #e0e0e0; padding: 4px 6px; width: 90px; font-size: 12px; }
+@media (max-width: 768px) { .grid { grid-template-columns: 1fr; } .app { padding: 12px; } }
+</style>
+</head>
+<body>
+<div class="login-container" id="loginContainer">
+  <div class="login-box">
+    <h1>🔐 LocalServer 管理</h1>
+    <input type="password" id="passwordInput" placeholder="输入管理密码" autocomplete="off" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">登录</button>
+    <div class="error" id="loginError"></div>
+  </div>
+</div>
+
+<div class="app" id="app">
+  <div class="app-header">
+    <h1>🛠️ LocalServer 管理面板</h1>
+    <div class="inline-flex">
+      <span class="user-info" id="headerStatus">服务器: <span id="serverStatusText">未知</span></span>
+      <button class="logout-btn" onclick="logout()">退出</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="dashboard" onclick="switchTab('dashboard')">📊 总览</div>
+    <div class="tab" data-tab="users" onclick="switchTab('users')">👥 用户</div>
+    <div class="tab" data-tab="money" onclick="switchTab('money')">💰 AI用钱</div>
+    <div class="tab" data-tab="features" onclick="switchTab('features')">⚙️ 功能</div>
+    <div class="tab" data-tab="schedule" onclick="switchTab('schedule')">📅 课表</div>
+    <div class="tab" data-tab="accesslog" onclick="switchTab('accesslog')">📋 访问记录</div>
+    <div class="tab" data-tab="aihistory" onclick="switchTab('aihistory')">🤖 AI历史</div>
+    <div class="tab" data-tab="dailyusage" onclick="switchTab('dailyusage')">📊 每日使用</div>
+  </div>
+
+  <!-- ─── 总览 ─── -->
+  <div class="content-section active" id="section-dashboard">
+    <div class="grid">
+      <div class="card">
+        <h2>服务器状态</h2>
+        <div class="inline-flex">
+          <span id="dashboardStatus" class="status-badge status-off">已暂停</span>
+          <button class="btn btn-success" onclick="toggleServer(1)">开启</button>
+          <button class="btn btn-danger" onclick="toggleServer(0)">暂停</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>管理密码</h2>
+        <div class="inline-flex">
+          <input type="password" id="newPasswordInput" class="search-input" placeholder="新密码" style="width:150px">
+          <button class="btn" onclick="changePassword()">修改</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>系统信息</h2>
+        <div><span class="label">用户数:</span> <span id="totalUsers">-</span></div>
+        <div><span class="label">AI 会话数:</span> <span id="totalSessions">-</span></div>
+        <div><span class="label">今日 AI 请求:</span> <span id="todayRequests">-</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 用户管理 ─── -->
+  <div class="content-section" id="section-users">
+    <div class="card card-full">
+      <div class="flex-between">
+        <h2>👥 IP ↔ 用户名管理</h2>
+        <div class="inline-flex">
+          <input type="text" id="newUserIp" class="search-input" placeholder="IP 地址" style="width:140px">
+          <input type="text" id="newUserName" class="search-input" placeholder="用户名" style="width:140px">
+          <button class="btn btn-success" onclick="addUser()">添加</button>
+          <input type="text" id="userSearchInput" class="search-input" placeholder="搜索..." style="width:120px" oninput="renderUsers()">
+        </div>
+      </div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr><th>IP 地址</th><th>用户名</th><th>操作</th></tr></thead>
+          <tbody id="userTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── AI用钱 ─── -->
+  <div class="content-section" id="section-money">
+    <div class="grid">
+      <div class="card card-full">
+        <div class="flex-between">
+          <h2>💰 AI 用钱 & VIP 管理</h2>
+          <input type="text" id="moneySearchInput" class="search-input" placeholder="搜索用户..." style="width:140px" oninput="renderMoneyTable()">
+        </div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead><tr><th>用户名</th><th>已花费 (¥)</th><th>VIP</th><th>操作</th></tr></thead>
+            <tbody id="moneyTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 功能开关 ─── -->
+  <div class="content-section" id="section-features">
+    <div class="card card-full">
+      <h2>⚙️ 功能开关</h2>
+      <div id="featuresContainer"></div>
+      <button class="btn mt-8" onclick="saveFeatures()">保存功能设置</button>
+    </div>
+  </div>
+
+  <!-- ─── 课表编辑 ─── -->
+  <div class="content-section" id="section-schedule">
+    <div class="card card-full">
+      <div class="flex-between">
+        <h2>📅 上课禁用课表</h2>
+        <div class="inline-flex">
+          <span style="font-size:13px;color:#888">当前使用:</span>
+          <select id="scheduleSelect" class="sort-select" onchange="switchSchedule(this.value)">
+            <option value="default">默认课表</option>
+            <option value="backup">备用课表</option>
+          </select>
+        </div>
+      </div>
+      <p style="font-size:13px;color:#888;margin-bottom:12px">每行一个时间段，格式：开始时间 → 结束时间（HH:MM:SS）。编辑的是当前选中的课表。</p>
+      <div id="scheduleContainer"></div>
+      <div class="inline-flex mt-8">
+        <button class="btn btn-success" onclick="addScheduleRow()">+ 添加时间段</button>
+        <button class="btn" onclick="saveSchedule()">保存课表</button>
+      </div>
+    </div>
+    <!-- ─── 陪伴模式周课表（建议课表） ─── -->
+    <div class="card card-full mt-8">
+      <h2>🗓️ 陪伴模式周课表（建议课表）</h2>
+      <p style="font-size:13px;color:#888;margin-bottom:12px">此课表用于 AI 陪伴模式和课堂语音记录查询。将建议课表应用到所有用户后，AI 助手即可查询各门课的语音记录。</p>
+      <div class="inline-flex mt-8">
+        <button class="btn btn-success" onclick="applyDefaultWeekSchedule()">📋 使用建议课表（应用到所有用户）</button>
+        <button class="btn" onclick="previewWeekSchedule()">👁️ 预览建议课表</button>
+        <button class="btn" onclick="loadWeekScheduleStatus()">🔄 查看当前各用户状态</button>
+      </div>
+      <div id="weekSchedulePreview" style="display:none;margin-top:12px"></div>
+      <div id="weekScheduleStatus" style="display:none;margin-top:12px"></div>
+    </div>
+  </div
+
+  <!-- ─── 访问记录 ─── -->
+  <div class="content-section" id="section-accesslog">
+    <div class="card card-full">
+      <div class="flex-between">
+        <h2>📋 访问记录</h2>
+        <div class="inline-flex">
+          <select id="logSortSelect" class="sort-select" onchange="loadAccessLog()">
+            <option value="time_desc">最近优先 ↓</option>
+            <option value="time_asc">最早优先 ↑</option>
+          </select>
+        </div>
+      </div>
+      <div id="accessLogContainer"><div class="empty-state">加载中...</div></div>
+    </div>
+  </div>
+
+  <!-- ─── AI历史 ─── -->
+  <div class="content-section" id="section-aihistory">
+    <div class="card card-full">
+      <div class="flex-between">
+        <h2>🤖 AI 历史记录</h2>
+        <div class="inline-flex">
+          <select id="historySortSelect" class="sort-select" onchange="loadAIHistory()">
+            <option value="time_desc">最近修改 ↓</option>
+            <option value="time_asc">最早修改 ↑</option>
+            <option value="length_desc">长度优先 ↓</option>
+            <option value="length_asc">长度优先 ↑</option>
+          </select>
+        </div>
+      </div>
+      <div id="aiHistoryContainer"><div class="empty-state">加载中...</div></div>
+    </div>
+  </div>
+
+  <!-- ─── 每日使用 ─── -->
+  <div class="content-section" id="section-dailyusage">
+    <div class="card card-full">
+      <div class="flex-between">
+        <h2>📊 每日 AI 使用次数</h2>
+        <div class="inline-flex">
+          <span style="font-size:13px;color:#888">每人上限:</span>
+          <input type="number" id="aiLimitPerDay" style="width:60px;background:#16213e;border:1px solid #0f3460;border-radius:4px;color:#e0e0e0;padding:4px 6px" min="1" max="999">
+          <button class="btn btn-sm" onclick="saveAILimit()">保存上限</button>
+          <button class="btn btn-danger" onclick="resetAllDailyUsage()">重置所有</button>
+          <button class="btn" onclick="loadDailyUsage()">刷新</button>
+        </div>
+      </div>
+      <p style="font-size:13px;color:#888;margin-bottom:12px">超过限制后该用户不能再使用 AI。可在功能开关中关闭此限制。</p>
+      <div id="dailyUsageContainer"><div class="empty-state">加载中...</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── 全局状态 ───
+let adminPassword = '';
+let allConfig = null;
+
+// ─── 登录 ───
+function doLogin() {
+  const pw = document.getElementById('passwordInput').value;
+  if (!pw) { document.getElementById('loginError').textContent = '请输入密码'; return; }
+  // 用一个简单接口验证密码
+  fetch('/api/manage/config?p=' + encodeURIComponent(pw))
+    .then(r => { if (!r.ok) throw new Error('密码错误'); return r.json(); })
+    .then(data => {
+      adminPassword = pw;
+      allConfig = data;
+      document.getElementById('loginContainer').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      renderAll();
+    })
+    .catch(e => {
+      document.getElementById('loginError').textContent = '密码错误或无权访问';
+    });
+}
+function logout() { adminPassword = ''; document.getElementById('app').style.display = 'none'; document.getElementById('loginContainer').style.display = 'flex'; location.reload(); }
+
+// ─── Tab 切换 ───
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+  document.querySelector(`.tab[data-tab="${name}"]`).classList.add('active');
+  document.getElementById(`section-${name}`).classList.add('active');
+  if (name === 'users') renderUsers();
+  if (name === 'money') loadMoneyData();
+  if (name === 'features') loadFeatures();
+  if (name === 'schedule') loadSchedule();
+  if (name === 'accesslog') loadAccessLog();
+  if (name === 'aihistory') loadAIHistory();
+  if (name === 'dailyusage') loadDailyUsage();
+  if (name === 'dashboard') renderDashboard();
+}
+
+// ─── API 通用请求 ───
+function apiGet(path) {
+  const sep = path.includes('?') ? '&' : '?';
+  return fetch(path + sep + 'p=' + encodeURIComponent(adminPassword)).then(r => { if (!r.ok) throw new Error('Request failed'); return r.json(); });
+}
+function apiPost(path, data) {
+  return fetch(path + '?p=' + encodeURIComponent(adminPassword), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }).then(r => r.json());
+}
+function apiPut(path, data) {
+  return fetch(path + '?p=' + encodeURIComponent(adminPassword), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }).then(r => r.json());
+}
+function apiDelete(path, data) {
+  return fetch(path + '?p=' + encodeURIComponent(adminPassword), { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }).then(r => r.json());
+}
+
+// ─── 主渲染 ───
+function renderAll() {
+  renderDashboard();
+  renderUsers();
+  loadMoneyData();
+  loadFeatures();
+  loadSchedule();
+}
+
+// ─── 总览 ───
+function renderDashboard() {
+  const status = allConfig.server_status;
+  document.getElementById('dashboardStatus').textContent = status ? '运行中' : '已暂停';
+  document.getElementById('dashboardStatus').className = 'status-badge ' + (status ? 'status-on' : 'status-off');
+  document.getElementById('serverStatusText').textContent = status ? '运行中' : '已暂停';
+  document.getElementById('totalUsers').textContent = allConfig.users.length;
+  document.getElementById('totalSessions').textContent = '加载中...';
+  document.getElementById('todayRequests').textContent = '加载中...';
+
+  // AI 历史总数
+  apiGet('/api/manage/ai-history').then(d => {
+    document.getElementById('totalSessions').textContent = d.total;
+  }).catch(() => document.getElementById('totalSessions').textContent = '?');
+
+  // 今日请求数
+  apiGet('/api/manage/daily-usage').then(d => {
+    const today = new Date().toISOString().slice(0, 10);
+    const todayData = d[today] || {};
+    let total = 0;
+    Object.values(todayData).forEach(v => total += v);
+    document.getElementById('todayRequests').textContent = total;
+    // 也统计人数
+    const usersWithUsage = Object.keys(todayData).length;
+  }).catch(() => document.getElementById('todayRequests').textContent = '?');
+}
+
+function toggleServer(status) {
+  apiPost('/api/manage/server', { status }).then(d => {
+    allConfig.server_status = d.status;
+    renderDashboard();
+  });
+}
+
+// ─── 密码修改 ───
+function changePassword() {
+  const newPw = document.getElementById('newPasswordInput').value;
+  if (!newPw || newPw.length < 4) { alert('密码至少 4 位'); return; }
+  apiPost('/api/manage/password', { new_password: newPw }).then(d => {
+    adminPassword = newPw;
+    document.getElementById('newPasswordInput').value = '';
+    alert('密码已更新！');
+  }).catch(e => alert('修改失败: ' + e));
+}
+
+// ─── 用户管理 ───
+function renderUsers() {
+  const search = (document.getElementById('userSearchInput').value || '').toLowerCase();
+  const users = allConfig.users;
+  const filtered = users.filter(u => u.ip.includes(search) || u.username.toLowerCase().includes(search));
+  const html = filtered.map(u => `<tr>
+    <td><input type="text" id="uip_${u.ip}" value="${u.ip}" style="width:160px"></td>
+    <td><input type="text" id="uname_${u.ip}" value="${u.username}" style="width:160px"></td>
+    <td>
+      <button class="btn btn-sm btn-success" onclick="saveUser('${u.ip}')">保存</button>
+      <button class="btn btn-sm btn-danger" onclick="deleteUser('${u.ip}')">删除</button>
+    </td>
+  </tr>`).join('');
+  document.getElementById('userTableBody').innerHTML = html || '<tr><td colspan="3" style="text-align:center;color:#666">无匹配用户</td></tr>';
+}
+function saveUser(origIp) {
+  const ip = document.getElementById('uip_' + origIp).value;
+  const username = document.getElementById('uname_' + origIp).value;
+  // 如果 IP 改变了，先删再加
+  if (ip !== origIp) {
+    apiDelete('/api/manage/users', { ip: origIp }).then(() => {
+      apiPut('/api/manage/users', { ip, username }).then(d => { refreshConfig(); });
+    });
+  } else {
+    apiPut('/api/manage/users', { ip, username }).then(d => { refreshConfig(); });
+  }
+}
+function deleteUser(ip) {
+  if (!confirm('确定删除 ' + ip + ' 吗？')) return;
+  apiDelete('/api/manage/users', { ip }).then(d => { refreshConfig(); });
+}
+function addUser() {
+  const ip = document.getElementById('newUserIp').value;
+  const username = document.getElementById('newUserName').value;
+  if (!ip) { alert('请输入 IP'); return; }
+  apiPut('/api/manage/users', { ip, username }).then(d => {
+    document.getElementById('newUserIp').value = '';
+    document.getElementById('newUserName').value = '';
+    refreshConfig();
+  });
+}
+
+// ─── AI 用钱 ───
+function loadMoneyData() {
+  apiGet('/api/manage/money').then(data => {
+    allConfig.money_data = data;
+    renderMoneyTable();
+  });
+}
+function renderMoneyTable() {
+  const search = (document.getElementById('moneySearchInput').value || '').toLowerCase();
+  const data = allConfig.money_data || {};
+  const entries = Object.entries(data).filter(([name]) => name.toLowerCase().includes(search));
+  const html = entries.map(([name, info]) => `<tr>
+    <td>${name}</td>
+    <td><input type="number" step="0.000001" id="money_${name}" value="${info.money || 0}" style="width:100px"> ¥</td>
+    <td><span class="status-badge ${info.isVIP ? 'status-on' : 'status-off'}">${info.isVIP ? 'VIP' : '普通'}</span></td>
+    <td>
+      <button class="btn btn-sm" onclick="updateMoney('${name}')">更新花费</button>
+      <button class="btn btn-sm ${info.isVIP ? 'btn-warning' : 'btn-success'}" onclick="toggleVIP('${name}', ${!info.isVIP})">${info.isVIP ? '取消VIP' : '设为VIP'}</button>
+    </td>
+  </tr>`).join('');
+  document.getElementById('moneyTableBody').innerHTML = html || '<tr><td colspan="4" style="text-align:center;color:#666">无数据</td></tr>';
+}
+function updateMoney(username) {
+  const money = parseFloat(document.getElementById('money_' + username).value) || 0;
+  apiPost('/api/manage/money', { username, money }).then(d => { loadMoneyData(); });
+}
+function toggleVIP(username, vip) {
+  apiPost('/api/manage/vip', { username, vip }).then(d => { loadMoneyData(); });
+}
+
+// ─── 功能开关 ───
+function loadFeatures() {
+  apiGet('/api/manage/features').then(data => {
+    allConfig.features = data;
+    renderFeatures();
+  });
+}
+const FEATURE_LABELS = {
+  ai: 'AI 对话', talk: '局域网聊天', music: '音乐播放',
+  games: '小游戏', file_sharing: '文件串流', game_class_ban: '上课禁用游戏',
+  ai_daily_limit: 'AI 每日10次限制', guest_access: '允许未注册用户访问'
+};
+function renderFeatures() {
+  const features = allConfig.features || {};
+  const html = Object.entries(FEATURE_LABELS).map(([key, label]) => `<label class="toggle">
+    <input type="checkbox" ${features[key] !== false ? 'checked' : ''} data-key="${key}" onchange="featureChanged('${key}', this.checked)">
+    <span class="slider"></span>
+    ${label}
+  </label>`).join('');
+  document.getElementById('featuresContainer').innerHTML = html;
+}
+let featureChanges = {};
+function featureChanged(key, value) { featureChanges[key] = value; }
+function saveFeatures() {
+  const data = allConfig.features || {};
+  Object.keys(featureChanges).forEach(k => data[k] = featureChanges[k]);
+  apiPost('/api/manage/features', data).then(d => { featureChanges = {}; alert('功能设置已保存'); });
+}
+
+// ─── 课表编辑 ───
+let currentScheduleKey = 'schedule';
+
+function loadSchedule() {
+  apiGet('/api/manage/schedule').then(data => {
+    allConfig.schedule = data.schedule;
+    allConfig.backup_schedule = data.backup_schedule;
+    allConfig.schedule_active = data.active || 'default';
+    renderSchedule();
+  });
+}
+function renderSchedule() {
+  const active = allConfig.schedule_active || 'default';
+  document.getElementById('scheduleSelect').value = active;
+  
+  // 显示当前选中的课表
+  const scheduleKey = currentScheduleKey === 'backup' ? 'backup_schedule' : 'schedule';
+  const schedule = allConfig[scheduleKey] || {};
+  const entries = Object.entries(schedule);
+  const html = entries.map(([start, end], i) => `<div class="inline-flex mb-8">
+    <input type="time" class="time-input" id="sched_start_${i}" value="${start.slice(0,5)}" step="1">
+    <span>→</span>
+    <input type="time" class="time-input" id="sched_end_${i}" value="${end.slice(0,5)}" step="1">
+    <span style="color:#888;font-size:12px"> ${start} → ${end}</span>
+    <button class="btn btn-sm btn-danger" onclick="removeScheduleRow(${i})">✕</button>
+  </div>`).join('');
+  document.getElementById('scheduleContainer').innerHTML = html || '<div class="empty-state">暂无课表设置</div>';
+}
+function switchSchedule(name) {
+  currentScheduleKey = name;
+  renderSchedule();
+}
+function addScheduleRow() {
+  const scheduleKey = currentScheduleKey === 'backup' ? 'backup_schedule' : 'schedule';
+  const schedule = allConfig[scheduleKey] || {};
+  schedule['00:00:00'] = '00:00:00';
+  if (currentScheduleKey === 'backup') {
+    allConfig.backup_schedule = schedule;
+  } else {
+    allConfig.schedule = schedule;
+  }
+  renderSchedule();
+}
+function removeScheduleRow(index) {
+  const scheduleKey = currentScheduleKey === 'backup' ? 'backup_schedule' : 'schedule';
+  const schedule = allConfig[scheduleKey] || {};
+  const keys = Object.keys(schedule);
+  if (index < keys.length) {
+    delete schedule[keys[index]];
+    if (currentScheduleKey === 'backup') {
+      allConfig.backup_schedule = schedule;
+    } else {
+      allConfig.schedule = schedule;
+    }
+    renderSchedule();
+  }
+}
+function saveSchedule() {
+  const container = document.getElementById('scheduleContainer');
+  const inputs = container.querySelectorAll('.time-input');
+  const newSchedule = {};
+  for (let i = 0; i < inputs.length; i += 2) {
+    const start = inputs[i].value + ':00';
+    const end = inputs[i+1].value + ':00';
+    if (start && end) newSchedule[start] = end;
+  }
+  
+  // 构建请求体：课表内容 + 当前激活标记
+  const body = { schedule: newSchedule };
+  
+  apiPost('/api/manage/schedule', body).then(d => {
+    allConfig.schedule = d.schedule;
+    allConfig.backup_schedule = d.backup_schedule;
+    allConfig.schedule_active = d.active;
+    renderSchedule();
+    alert('课表已保存');
+  }).catch(() => alert('保存失败'));
+}
+
+// ─── 访问记录 ───
+function loadAccessLog(page) {
+  if (!page) page = 1;
+  const sort = document.getElementById('logSortSelect').value;
+  apiGet('/api/manage/access-log?page=' + page + '&per_page=50&sort=' + sort).then(data => {
+    renderAccessLog(data, page);
+  });
+}
+let currentLogPage = 1;
+function renderAccessLog(data, page) {
+  currentLogPage = page || 1;
+  const totalPages = data.total_pages;
+  const records = data.records;
+  let html = `<table><thead><tr><th>#</th><th>时间</th><th>功能</th><th>用户</th><th>IP</th></tr></thead><tbody>`;
+  records.forEach((r, i) => {
+    const idx = (page - 1) * data.per_page + i + 1;
+    // If it's a string (legacy), display as-is
+    if (typeof r === 'string') {
+      html += `<tr><td>${idx}</td><td colspan="4" style="font-family:monospace;font-size:12px">${r}</td></tr>`;
+    } else {
+      const pageIcon = {'AI对话':'🤖','聊天':'💬','文件串流':'📁','音乐':'🎵','游戏':'🎮','定数表':'📊','跳转链接':'🔗','登录页':'🔑','渲染页':'📝'};
+      const icon = pageIcon[r.page] || '📄';
+      html += `<tr><td>${idx}</td><td style="font-size:12px">${r.time || ''}</td><td>${icon} ${r.page || ''}</td><td>${r.username || ''}</td><td style="font-size:12px;color:#666">${r.ip || ''}</td></tr>`;
+    }
+  });
+  html += `</tbody></table>`;
+  html += `<div class="pagination">`;
+  html += `<button onclick="loadAccessLog(${page-1})" ${page<=1?'disabled':''}>上一页</button>`;
+  html += `<span>第 ${page}/${totalPages} 页（共 ${data.total} 条）</span>`;
+  html += `<button onclick="loadAccessLog(${page+1})" ${page>=totalPages?'disabled':''}>下一页</button>`;
+  html += `</div>`;
+  document.getElementById('accessLogContainer').innerHTML = html;
+}
+
+// ─── AI 历史 ───
+function loadAIHistory(page) {
+  if (!page) page = 1;
+  const sort = document.getElementById('historySortSelect').value;
+  apiGet('/api/manage/ai-history?page=' + page + '&per_page=20&sort=' + sort).then(data => {
+    renderAIHistory(data, page);
+  });
+}
+let currentHistoryPage = 1;
+function renderAIHistory(data, page) {
+  currentHistoryPage = page || 1;
+  const sessions = data.sessions;
+  let html = `<table><thead><tr><th>用户名</th><th>消息数</th><th>总字符数</th><th>最后修改</th><th>大小</th><th>预览</th></tr></thead><tbody>`;
+  sessions.forEach(s => {
+    html += `<tr>
+      <td><strong>${s.username}</strong></td>
+      <td>${s.msg_count}</td>
+      <td>${s.total_chars}</td>
+      <td style="font-size:12px">${s.mtime}</td>
+      <td>${s.size_kb || 0} KB</td>
+      <td><button class="btn btn-sm" onclick="previewHistory('${s.username}')">查看</button></td>
+    </tr>`;
+  });
+  html += `</tbody></table>`;
+  if (data.total_pages > 1) {
+    html += `<div class="pagination">`;
+    html += `<button onclick="loadAIHistory(${page-1})" ${page<=1?'disabled':''}>上一页</button>`;
+    html += `<span>第 ${page}/${data.total_pages} 页（共 ${data.total} 个会话）</span>`;
+    html += `<button onclick="loadAIHistory(${page+1})" ${page>=data.total_pages?'disabled':''}>下一页</button>`;
+    html += `</div>`;
+  }
+  document.getElementById('aiHistoryContainer').innerHTML = html;
+}
+function previewHistory(username) {
+  // 读取该用户的 AI 历史
+  fetch('/api/history/' + username).then(r => r.text()).then(content => {
+    try {
+      const data = JSON.parse(content);
+      let html = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <strong style="color:#00d4ff">${username} 的 AI 对话记录</strong>
+        <button class="btn btn-sm btn-danger" onclick="document.getElementById('historyPreview').style.display='none'">关闭</button>
+      </div>`;
+      data.forEach((msg, i) => {
+        const role = msg.role === 'user' ? '👤 用户' : msg.role === 'assistant' ? '🤖 AI' : '⚙️ 系统';
+        const color = msg.role === 'user' ? '#00d4ff' : msg.role === 'assistant' ? '#2ed573' : '#888';
+        const contentPreview = (msg.content || '').substring(0, 500);
+        html += `<div style="margin:8px 0;padding:8px;background:#16213e;border-left:3px solid ${color};border-radius:4px">
+          <div style="font-size:12px;color:${color};margin-bottom:4px"><strong>${role}</strong> <span style="color:#666">#${i}</span></div>
+          <div style="font-size:13px;white-space:pre-wrap;word-break:break-word">${escapeHtml(contentPreview)}</div>
+        </div>`;
+      });
+      if (data.length === 0) html += '<div class="empty-state">无对话记录</div>';
+      document.getElementById('aiHistoryContainer').innerHTML =
+        `<div id="historyPreview" style="background:#1a1a2e;padding:16px;border-radius:8px;max-height:600px;overflow-y:auto">${html}</div>
+        <button class="btn mt-8" onclick="loadAIHistory(${currentHistoryPage})">返回列表</button>`;
+    } catch(e) {
+      alert('无法解析历史记录');
+    }
+  });
+}
+
+// ─── 每日使用 ───
+function loadDailyUsage() {
+  const today = new Date().toISOString().slice(0, 10);
+  // 从全部配置中获取限制值
+  apiGet('/api/manage/config').then(cfg => {
+    const limit = cfg.ai_limit_per_day || 10;
+    document.getElementById('aiLimitPerDay').value = limit;
+  }).catch(() => {});
+  apiGet('/api/manage/daily-usage').then(data => {
+    const todayData = data[today] || {};
+    const entries = Object.entries(todayData).sort((a, b) => b[1] - a[1]);
+    let html = `<table><thead><tr><th>用户名</th><th>今日已用次数</th><th>剩余</th><th>操作</th></tr></thead><tbody>`;
+    if (entries.length === 0) {
+      html += `<tr><td colspan="4" style="text-align:center;color:#666">今天还没有人使用过 AI</td></tr>`;
+    } else {
+      entries.forEach(([name, count]) => {
+        const remaining = Math.max(0, 10 - count);
+        html += `<tr>
+          <td><strong>${name}</strong></td>
+          <td><input type="number" id="dusage_${name}" value="${count}" min="0" style="width:60px"></td>
+          <td><span class="status-badge ${remaining > 0 ? 'status-on' : 'status-off'}">${remaining > 0 ? remaining + ' 次' : '已用完'}</span></td>
+          <td>
+            <button class="btn btn-sm" onclick="updateDailyUsage('${name}')">更新</button>
+            <button class="btn btn-sm btn-success" onclick="resetUserDaily('${name}')">重置为0</button>
+          </td>
+        </tr>`;
+      });
+    }
+    html += `</tbody></table>`;
+
+    // 显示所有日期的数据
+    const allDates = Object.keys(data).sort().reverse();
+    if (allDates.length > 0) {
+      html += `<details style="margin-top:16px"><summary style="cursor:pointer;color:#00d4ff;font-size:14px">所有日期的使用记录</summary>`;
+      allDates.forEach(date => {
+        const dayData = data[date];
+        const dayEntries = Object.entries(dayData).sort((a, b) => b[1] - a[1]);
+        let total = 0;
+        dayEntries.forEach(([,c]) => total += c);
+        html += `<div style="margin:8px 0;padding:8px;background:#16213e;border-radius:4px">
+          <strong style="color:#888">${date}</strong> <span style="color:#00d4ff;font-size:12px">（共 ${total} 次）</span>
+          <div style="font-size:12px;margin-top:4px">`;
+        dayEntries.slice(0,10).forEach(([name, count]) => {
+          html += `<span style="display:inline-block;margin:2px 8px 2px 0">${name}: <strong>${count}</strong></span>`;
+        });
+        if (dayEntries.length > 10) html += `<span style="color:#666">...共 ${dayEntries.length} 人</span>`;
+        html += `</div></div>`;
+      });
+      html += `</details>`;
+    }
+
+    document.getElementById('dailyUsageContainer').innerHTML = html;
+  });
+}
+function updateDailyUsage(username) {
+  const count = parseInt(document.getElementById('dusage_' + username).value) || 0;
+  const today = new Date().toISOString().slice(0, 10);
+  apiPost('/api/manage/daily-usage', { date: today, username, count }).then(d => { loadDailyUsage(); });
+}
+function resetUserDaily(username) {
+  if (!confirm('确定重置 ' + username + ' 的今日使用次数吗？')) return;
+  const today = new Date().toISOString().slice(0, 10);
+  apiPost('/api/manage/daily-usage', { date: today, username, count: 0 }).then(d => { loadDailyUsage(); });
+}
+function saveAILimit() {
+  const limit = parseInt(document.getElementById('aiLimitPerDay').value) || 10;
+  fetch('/api/manage/save-limit?p=' + encodeURIComponent(adminPassword), {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ai_limit_per_day: limit})
+  }).then(r => r.json()).then(d => {
+    if (d.success) alert('每日上限已更新为 ' + limit + ' 次');
+    else alert('保存失败');
+  }).catch(() => alert('保存失败'));
+}
+function resetAllDailyUsage() {
+  if (!confirm('确定重置所有用户今日的 AI 使用次数吗？')) return;
+  apiPost('/api/manage/daily-usage/reset', {}).then(d => { loadDailyUsage(); });
+}
+
+// ─── 周课表管理 ───
+
+function applyDefaultWeekSchedule() {
+  if (!confirm('确定将所有用户的陪伴模式周课表设置为建议课表吗？\n（这会覆盖每个用户的个性化课表设置）')) return;
+  apiPost('/api/manage/week-schedules/apply-default', {}).then(d => {
+    if (d.success) {
+      alert('✅ 建议课表已成功应用到 ' + d.count + ' 个用户！\nAI 助手现在可以查询各门课的语音记录了。');
+    } else {
+      alert('应用失败: ' + JSON.stringify(d));
+    }
+  }).catch(e => alert('请求失败: ' + e));
+}
+
+function previewWeekSchedule() {
+  const el = document.getElementById('weekSchedulePreview');
+  const statusEl = document.getElementById('weekScheduleStatus');
+  statusEl.style.display = 'none';
+  
+  if (el.style.display !== 'none') {
+    el.style.display = 'none';
+    return;
+  }
+  
+  el.style.display = 'block';
+  el.innerHTML = '<div class="empty-state">加载中...</div>';
+  
+  apiGet('/api/manage/week-schedules').then(data => {
+    const def = data.default_schedule || {};
+    const dayNames = {
+      monday: '星期一', tuesday: '星期二', wednesday: '星期三',
+      thursday: '星期四', friday: '星期五', saturday: '星期六', sunday: '星期日'
+    };
+    let html = '<div style="max-height:500px;overflow-y:auto;background:#16213e;border-radius:8px;padding:12px">';
+    html += '<h3 style="color:#00d4ff;margin-bottom:12px">📋 建议课表（默认周课表）</h3>';
+    
+    for (const [dayKey, dayLabel] of Object.entries(dayNames)) {
+      const slots = def[dayKey] || [];
+      html += `<div style="margin-bottom:12px">`;
+      html += `<strong style="color:#888;font-size:14px">${dayLabel}</strong>`;
+      if (slots.length === 0) {
+        html += `<span style="color:#666;font-size:12px;margin-left:8px">（无排课）</span>`;
+      } else {
+        html += '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">';
+        slots.forEach(s => {
+          const name = s.name || '';
+          html += `<span style="background:#0f3460;padding:2px 8px;border-radius:4px;font-size:12px;white-space:nowrap">${s.start}-${s.end} ${name}</span>`;
+        });
+        html += '</div>';
+      }
+      html += '</div>';
+    }
+    html += '</div>';
+    el.innerHTML = html;
+  }).catch(e => { el.innerHTML = '<div style="color:#ff6b6b">加载失败: ' + e + '</div>'; });
+}
+
+function loadWeekScheduleStatus() {
+  const statusEl = document.getElementById('weekScheduleStatus');
+  const previewEl = document.getElementById('weekSchedulePreview');
+  previewEl.style.display = 'none';
+  
+  if (statusEl.style.display !== 'none') {
+    statusEl.style.display = 'none';
+    return;
+  }
+  
+  statusEl.style.display = 'block';
+  statusEl.innerHTML = '<div class="empty-state">加载中...</div>';
+  
+  apiGet('/api/manage/week-schedules').then(data => {
+    const users = data.users || {};
+    const def = data.default_schedule || {};
+    const dayNames = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+    
+    let html = '<div style="max-height:500px;overflow-y:auto;background:#16213e;border-radius:8px;padding:12px">';
+    html += '<h3 style="color:#00d4ff;margin-bottom:12px">👥 各用户课表状态</h3>';
+    
+    const usernames = Object.keys(users);
+    if (usernames.length === 0) {
+      html += '<div class="empty-state">暂无用户的课表配置（使用AI后会创建）</div>';
+    } else {
+      html += '<table><thead><tr><th>用户</th><th>课表状态</th><th>是否使用默认</th></tr></thead><tbody>';
+      usernames.forEach(uname => {
+        const sched = users[uname] || {};
+        const slotCount = dayNames.reduce((sum, d) => sum + ((sched[d] || []).length), 0);
+        const isDefault = slotCount > 0 && JSON.stringify(sched) === JSON.stringify(def);
+        html += `<tr><td><strong>${uname}</strong></td><td>${slotCount} 个时段</td><td><span class="status-badge ${isDefault ? 'status-on' : 'status-off'}">${isDefault ? '是' : '否'}</span></td></tr>`;
+      });
+      html += '</tbody></table>';
+    }
+    html += '</div>';
+    statusEl.innerHTML = html;
+  }).catch(e => { statusEl.innerHTML = '<div style="color:#ff6b6b">加载失败: ' + e + '</div>'; });
+}
+
+// ─── 辅助函数 ───
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function refreshConfig() {
+  apiGet('/api/manage/config').then(d => { allConfig = d; renderAll(); });
+}
+</script>
+</body>
+</html>

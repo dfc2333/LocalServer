@@ -1,0 +1,38 @@
+<html style="display=flex;height:100%">
+<script>
+function abc(d) {document.getElementById("frame"+d).src=document.getElementById("input"+d).value;
+alert(document.getElementById("input"+d).value)}</script>
+<div style="flex:1;display:flex">
+<div style="flex:2">
+<input id="input1" placeholder="输入url" value="/ai"></input><button onClick='abc("1")'>换</button></div>
+<div style="flex:3">
+<input id="input2" placeholder="输入url" value="/talk"></input><button onClick='abc("2")'>换</button></div>
+</div>
+<div style="flex:10;display:flex;height:100%">
+<div style="flex:2; overflow: auto; position: relative;">
+  <iframe 
+    src="/ai" 
+    id="frame1"
+    style="
+      width: 150%;
+      height: 150%;
+      transform: scale(0.66);
+      transform-origin: 0 0;
+      border: none;
+    "
+  ></iframe>
+</div>
+<div style="flex:3; overflow: auto; position: relative;">
+  <iframe 
+    src="/talk" 
+    id="frame2"
+    style="
+      width: 125%;
+      height: 125%;
+      transform: scale(0.8);
+      transform-origin: 0 0;
+      border: none;
+    "
+  ></iframe>
+</div>
+</div></html>

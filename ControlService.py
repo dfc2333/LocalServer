@@ -1,6 +1,8 @@
+﻿import subprocess
+
 from flask import request, send_from_directory
 import os, json
-from tools import verifier, change_userlist
+from tools import base_route, verifier, change_userlist
 from config import root, loc_dir, net_dir, serverStatus, log_dir
 
 def start():
@@ -18,15 +20,16 @@ def tmpexit():
 
 def restart():
     if verifier(str(request.args.get('p')),str(request.remote_addr))!=2: return 'unauth'
-    os.system('shutdown /r /t 0')
+    subprocess.getoutput('shutdown /r /t 0')
     return 'success'
 
 def stop():
-    os.system('shutdown /s /t 0')
+    subprocess.getoutput('shutdown /s /t 0')
     os._exit(0)
 
+@base_route
 def clean():
-    a = os.system('rmdir /s /q {0}'.format(net_dir))
+    a = subprocess.getoutput('rmdir /s /q {0}'.format(net_dir))
     if not os.path.exists(loc_dir): os.makedirs(loc_dir, exist_ok=True)
     if not os.path.exists(net_dir): os.makedirs(net_dir, exist_ok=True)
     if not os.path.exists(net_dir+"/wyy"): os.makedirs(net_dir+"/wyy", exist_ok=True)
@@ -35,9 +38,10 @@ def clean():
     open(net_dir+'\\bili.log','w').close()
     return str(a)
 
+@base_route
 def run_cmd(cmdstr):
-    a = os.popen(cmdstr)
-    return str(a.read())
+    a = subprocess.getoutput(cmdstr)
+    return str(a)
 
 def blog():
     with open(net_dir+'\\bili.log') as a:
@@ -64,11 +68,13 @@ def changeip(mode,ip='',username='',self_call=False):
     change_userlist(mode,ip,username)
     return f"Successfully {mode}ed IP: {ip} as username: {username}"
 
+@base_route
 def view(path):
     with open(os.path.join(root,path),'r',encoding='utf-8') as file:
         result = file.read().split('\n')
     return '<br/>'.join(result)
     
+@base_route
 def contact(a):
     with open(root+'\\contact.txt','w',encoding='utf-8') as file:
         file.write(a)
@@ -79,7 +85,7 @@ def changeVIP(mode):
     if not username:
         return "No username provided", 400
     isVIP = True if mode == 'add' else False
-    money_file = os.path.join(log_dir, "moneys.log")
+    money_file = os.path.join(log_dir, "moneys.json")
     try:
         with open(money_file, 'r', encoding='utf-8') as f:
             data = json.loads(f.read())

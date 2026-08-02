@@ -1,0 +1,44 @@
+<link href="/res/ai.css"> 
+<title>建议箱</title> 
+<h1>建议箱</h1> 
+<textarea id="userInput" style="width: 80%; height: 70%" placeholder="在此输入你的建议..."></textarea> 
+<button onclick="submit()">提交</button> 
+<script>
+function submit(){
+    // 获取用户输入的建议内容
+    var suggestion = document.getElementById('userInput').value;
+    
+    // 首先从 /getname 获取 suggester（纯文本）
+    fetch('/getname')
+        .then(function(response) {
+            if (!response.ok) {
+                return "anonymous"
+            }
+            return response.text();
+        })
+        .then(function(suggester) {
+            // 然后 POST 到 /suggest
+            return fetch('/suggest', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    suggester: suggester,
+                    content: suggestion
+                })
+            });
+        })
+        .then(function(response) {
+            if (!response.ok) {
+                throw new Error('failed');
+            }
+            alert('建议已提交，谢谢你👍');
+            document.getElementById('userInput').value = '';
+        })
+        .catch(function(error) {
+            console.error('错误:', error);
+            alert('提交失败，可能连错网了或者服务器关了，记得复制你写了那么多的建议哦');
+        });
+}
+</script>

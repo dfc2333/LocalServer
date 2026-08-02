@@ -32,6 +32,327 @@
             background-color: #f9f9f9;
             border-radius: 5px;
         }
+        /* OCR 相关样式 */
+        .icon-btn {
+            width: 44px;
+            height: 44px;
+            padding: 0;
+            border-radius: 50%;
+            border: 2px solid #e2e8f0;
+            background: #f8fafc;
+            font-size: 1.3rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        .icon-btn:hover {
+            background: #edf2f7;
+            border-color: #4a6ee0;
+        }
+        .ocr-panel {
+            margin-top: 15px;
+            background: #fefcf0;
+            border: 2px solid #f6e5b3;
+            border-radius: 12px;
+            padding: 16px;
+        }
+        .ocr-panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #744210;
+        }
+        .ocr-result-text {
+            background: white;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 0.95rem;
+            width: 100%;
+            min-height: 100px;
+            max-height: 300px;
+            resize: vertical;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+            border: 1px solid #f6e5b3;
+            margin-bottom: 10px;
+            line-height: 1.5;
+            font-family: inherit;
+            box-sizing: border-box;
+        }
+        .ocr-result-actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .ocr-result-actions button {
+            flex: 1;
+            padding: 8px 12px;
+        }
+        .ocr-presets-area {
+            border-top: 1px dashed #e2d8a0;
+            padding-top: 10px;
+        }
+        .ocr-presets-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        .ocr-preset-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .ocr-preset-buttons .preset-btn {
+            padding: 6px 14px;
+            font-size: 0.8rem;
+            border-radius: 20px;
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #475569;
+        }
+        .ocr-preset-buttons .preset-btn:hover {
+            background: #e2e8f0;
+            border-color: #94a3b8;
+        }
+        .text-btn {
+            background: none;
+            border: none;
+            color: #4a6ee0;
+            cursor: pointer;
+            font-size: 0.8rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .text-btn:hover {
+            background: #ebf4ff;
+        }
+        .input-presets-area {
+            margin-top: 15px;
+        }
+        .preset-buttons {
+            margin: 6px 0 10px 0;
+        }
+        /* 预设编辑弹窗 */
+        .preset-edit-item {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .preset-edit-item input {
+            flex: 1;
+            padding: 8px 12px;
+        }
+        .preset-edit-item button {
+            flex-shrink: 0;
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            border-radius: 50%;
+        }
+
+        /* ─── 陪伴模式 ─────────────────────────── */
+        .companion-panel {
+            background: white;
+            border-radius: 16px;
+            padding: 15px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+            margin-bottom: 25px;
+        }
+        .companion-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #2d3748;
+        }
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider {
+            position: absolute; cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: #cbd5e0;
+            border-radius: 24px;
+            transition: 0.3s;
+        }
+        .toggle-slider::before {
+            content: "";
+            position: absolute; height: 18px; width: 18px;
+            left: 3px; bottom: 3px;
+            background: white;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+        .toggle-switch input:checked + .toggle-slider {
+            background: #4a6ee0;
+        }
+        .toggle-switch input:checked + .toggle-slider::before {
+            transform: translateX(20px);
+        }
+        .companion-status {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 10px;
+            padding: 10px 12px;
+            margin-bottom: 10px;
+            font-size: 0.85rem;
+            line-height: 1.8;
+            display: none;
+        }
+        .companion-status.active { display: block; }
+        .status-item { color: #166534; }
+        .companion-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .companion-actions button {
+            flex: 1;
+            padding: 8px 12px;
+            font-size: 0.85rem;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .companion-actions button:hover {
+            background: #edf2f7;
+            border-color: #4a6ee0;
+        }
+        /* ─── mic2text 实时音频 ──────────────── */
+        .mic2text-section {
+            background: #f5f3ff;
+            border: 1px solid #ddd6fe;
+            border-radius: 10px;
+            padding: 10px 12px;
+            margin-top: 10px;
+            font-size: 0.82rem;
+            display: none;
+        }
+        .mic2text-section.active { display: block; }
+        .mic2text-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: #5b21b6;
+        }
+        .mic2text-toggle-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: normal;
+            font-size: 0.78rem;
+            color: #6d28d9;
+            cursor: pointer;
+        }
+        .mic2text-toggle-label input { margin: 0; }
+        .mic2text-content {
+            background: white;
+            border-radius: 6px;
+            padding: 6px 10px;
+            max-height: 120px;
+            overflow-y: auto;
+            line-height: 1.6;
+        }
+        .mic2text-item {
+            color: #4c1d95;
+            font-size: 0.82rem;
+            padding: 1px 0;
+        }
+        .mic2text-item.time {
+            color: #8b5cf6;
+            font-size: 0.72rem;
+        }
+        .mic2text-empty {
+            color: #a78bfa;
+            font-style: italic;
+        }
+
+        .schedule-day-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+        .schedule-day-tab {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            border: 1px solid #e2e8f0;
+            background: #f1f5f9;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .schedule-day-tab.active {
+            background: #4a6ee0;
+            color: white;
+            border-color: #4a6ee0;
+        }
+        .schedule-slots { margin-bottom: 12px; }
+        .schedule-slot {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+        .schedule-slot input {
+            padding: 6px 8px;
+            font-size: 0.8rem;
+            border-radius: 6px;
+            flex: 1;
+        }
+        .schedule-slot input[type="time"] { flex: 0 0 95px; }
+        .schedule-slot button {
+            flex-shrink: 0;
+            width: 28px; height: 28px;
+            padding: 0;
+            border-radius: 50%;
+            font-size: 0.8rem;
+            background: #fee2e2;
+            border: 1px solid #fecaca;
+            cursor: pointer;
+        }
+        .schedule-add-btn {
+            padding: 6px 16px;
+            font-size: 0.8rem;
+            border-radius: 8px;
+            border: 1px dashed #94a3b8;
+            background: transparent;
+            cursor: pointer;
+            color: #4a6ee0;
+            width: 100%;
+        }
+        .memory-editor-textarea {
+            width: 100%;
+            min-height: 300px;
+            padding: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            resize: vertical;
+            line-height: 1.5;
+        }
     </style>
 </head>
 <body>
@@ -43,14 +364,11 @@
                 <span id="money">加载中...</span>
             </div>
         </header>
-        
         <div class="main-content">
             <div class="panel">
                 <div class="panel-title">
                     <span>对话历史</span>
-                    <button class="settings-toggle-btn" onclick="openSettings()">
-                        设置
-                    </button>
+                    <button onclick="MathJax.typesetPromise()">显示公式</button>
                 </div>
                 <div class="history-area" id="history"></div>
                 
@@ -58,13 +376,39 @@
                 
                 <div class="input-group">
                     <label for="userinp">输入你的问题</label>
-                    <input type="text" id="userinp" placeholder="输入你的问题..." onkeypress="if(event.keyCode==13) handle()">
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <input type="text" id="userinp" placeholder="输入你的问题..." onkeypress="if(event.keyCode==13) handle()" style="flex:1;">
+                        <button id="ocrUploadBtn" class="icon-btn" title="上传图片并识别文字" onclick="selectOcrImage()">🖼️</button>
+                        <input type="file" id="ocrFileInput" accept="image/*" style="display:none" onchange="handleOcrImage(this)">
+                    </div>
                 </div>
                 <div class="button-group">
-                    <button class="primary-btn" onclick="internethandle()">联网询问（仅vip可用）</button>
+                    <button class="primary-btn" onclick="internethandle()">联网询问</button>
                     <button class="primary-btn" onclick="handle()">
                         发送消息
                     </button>
+                </div>
+
+                <!-- OCR 识别结果面板 -->
+                <div id="ocrResultPanel" class="ocr-panel" style="display:none;">
+                    <div class="ocr-panel-header">
+                        <span>📄 识别结果</span>
+                        <button class="popup-close-btn" onclick="closeOcrPanel()">&times;</button>
+                    </div>
+                    <textarea id="ocrResultText" class="ocr-result-text"></textarea>
+                    <div class="ocr-result-actions">
+                        <button class="secondary-btn" onclick="copyOcrResult()">📋 复制</button>
+                        <button class="secondary-btn" onclick="useOcrResult()">📥 填入输入框</button>
+                    </div>
+                </div>
+
+                <!-- 提示区预设按钮（未识别时也显示） -->
+                <div class="input-presets-area">
+                    <div class="ocr-presets-header">
+                        <span>快捷输入</span>
+                        <button class="text-btn" onclick="openPresetEditor()">✏️ 编辑</button>
+                    </div>
+                    <div id="inputPresetsAreaBottom" class="ocr-preset-buttons"></div>
                 </div>
             </div>
             
@@ -80,27 +424,30 @@
                 
                 <div class="input-group">
                     <label for="sysprompt">系统提示词（角色设定，一个对话只能设置一次）</label>
-                    <input type="text" id="sysprompt" value="你是一个AI助手，能够帮助用户解答问题、提供建议和进行对话。">
+                    <input type="text" id="sysprompt" value="不要以抱歉开头">
                 </div>
                 
                 <div class="controls">
                     <div class="control-group">
                         <label for="model">选择AI模型</label>
                         <select id="model">
-                            <option value="deepseek-chat">DeepSeek 通用模型</option>
-                            <option value="deepseek-reasoner">DeepSeek 思考模型（仅限赞助者）</option>
+                            <option value="deepseek-v4-flash">v4 flash，一般问题就用这个，价格是下面那个的三分之一</option>
+
+<option value="deepseek-v4-pro">v4 pro nb模型，大家都能用，价格是上面那个的三倍</option>
                         </select>
+<label for="use_think">使用思考</label><input type="checkbox" id="use_think"></input>
+
                     </div>
                     
                     <div class="control-group">
                         <label for="temp">温度参数 (0.0-2.0)</label>
-                        <input type="number" id="temp" min="0" max="2" step="0.1" value="1.3">
+                        <input type="number" id="temp" min="0" max="2" step="0.1" value="0.7">
                     </div>
                 </div>
                 
                 <div class="tip">
                     <p><strong>温度参数说明：</strong>控制模型输出的随机性。数字越大输出越随机。</p>
-                    <p>推荐：数学计算用0.0，日常对话用1.3，文学创作可用1.5。（不建议使用2.0）</p>
+                    <p>推荐：数学计算用0.0，日常对话用0.7，文学创作可用1.0。（千万别用2.0，改了）</p>
                 </div>
                 
                 <div class="divider"></div>
@@ -122,8 +469,8 @@
                 </div>
                 
                 <div class="input-group">
-                    <label for="sysprompt">系统提示词（角色设定，一个对话只能设置一次）</label>
-                    <textarea id="msgContent"></textarea>
+                    <label for="msgContent">编辑消息内容</label>
+                    <textarea id="msgContent" style="width:100%;height:200px;"></textarea>
                 </div>
                 <div class="button-group">
                     <button class="close-popup" onclick="saveEditing()">
@@ -132,33 +479,151 @@
                 </div>
             </div>
             
+            <!-- 预设编辑弹窗 -->
+            <div class="popup-overlay" id="presetEditorOverlay" onclick="closePresetEditor()"></div>
+            <div class="settings-popup" id="presetEditorPopup">
+                <div class="popup-header">
+                    <div class="popup-title">
+                        <span class="status-indicator"></span> 快捷输入管理
+                    </div>
+                    <button class="popup-close-btn" onclick="closePresetEditor()">&times;</button>
+                </div>
+                <div class="input-group">
+                    <label>编辑快捷输入文本（点击后追加到输入框末尾）</label>
+                    <div id="presetEditList"></div>
+                    <button class="secondary-btn" onclick="addPresetItem()" style="margin-top:8px;">+ 添加快捷输入</button>
+                </div>
+                <div class="button-group">
+                    <button class="close-popup" onclick="resetPresets()" style="background:#fee2e2; color:#991b1b;">重置为推荐</button>
+                    <button class="close-popup" onclick="savePresetEditor()">保存设置</button>
+                </div>
+            </div>
+
             <!-- 设置摘要 -->
             <div class="settings-compact">
                 <div class="settings-summary">
                     <div class="settings-info">
                         <div class="settings-label">当前设置</div>
                         <div class="settings-value" id="currentModel">DeepSeek 通用模型</div>
-                        <div class="settings-value" id="currentTemp">温度: 1.3</div>
+                        <div class="settings-value" id="currentTemp">温度: 0.7</div>
                     </div>
                     <button class="settings-toggle-btn" onclick="openSettings()">
-                        修改设置
+                        设置
                     </button>
                 </div>
                 <div class="tip">
                     <p>点击"修改设置"调整AI模型、温度参数和系统提示词。
-现在修改删除重试都不能用，只有停止能用</p>
+现在几个按钮都可以用了</p>
                 </div>
                 <div class="input-group">
-                    <label for="hisid">历史记录名称</label>
-                    <input type="text" id="hisid" placeholder="给当前对话取一个名字，以便保存和读取">
-                    <p style="margin-top: 8px; color: #718096; font-size: 0.9rem;">填写名称后对话将被保存，AI也会有对话记忆。但是！！思考内容将不保存</p>
+                    <label for="hisid">历史记录</label>
+                    <div style="display:flex;gap:6px;align-items:center;position:relative;">
+                        <input type="text" id="hisid" placeholder="给当前对话取一个名字" style="flex:1;">
+                        <label class="toggle-switch" title="启用临时对话">
+                            <input type="checkbox" id="tempChatToggle" onchange="onTempChatToggle()">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <p style="margin-top: 8px; color: #718096; font-size: 0.9rem;">关闭开关=命名对话（有记忆）；开启开关=临时对话（每次打开刷新）。</p>
                 </div>
                 <button class="secondary-btn" onclick="flashHistory()">
                         刷新历史
                     </button>
             </div>
+
+            <!-- 陪伴模式面板 -->
+            <div class="companion-panel">
+                <div class="companion-header">
+                    <span>🤝 陪伴模式</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="companionToggle" onchange="toggleCompanion()">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="companion-status" id="companionStatusBar">
+                    <div class="status-item">⏰ 时间：<span id="companionTime">--</span></div>
+                    <div class="status-item">📚 课表：<span id="companionClassStatus">--</span></div>
+                    <div class="status-item">🎯 状态：<span id="companionUserStatus">--</span></div>
+                </div>
+                <div class="companion-actions">
+                    <button onclick="openCompanionSettings()">⚙️ 课表/状态</button>
+                    <button onclick="openMemoryEditor()">📝 AI记忆</button>
+                </div>
+                <!-- mic2text 实时音频面板 -->
+                <div class="mic2text-section" id="mic2textSection">
+                    <div class="mic2text-header">
+                        <span>🎤 实时音频</span>
+                        <label class="mic2text-toggle-label">
+                            <input type="checkbox" id="showMic2textInChat" onchange="saveMic2textPref()">
+                            对话中显示
+                        </label>
+                        <label class="mic2text-toggle-label" style="margin-top:4px;">
+                            <input type="checkbox" id="sendMic2textToAi" onchange="saveMic2textPref()">
+                            发送到AI上下文
+                        </label>
+                        <label class="mic2text-toggle-label" style="margin-top:4px;">
+                            <input type="checkbox" id="showTimeElapsed" onchange="saveMic2textPref()">
+                            发送距上次对话时间
+                        </label>
+
+                    </div>
+                    <div class="mic2text-content" id="mic2textContent">
+                        <div class="mic2text-empty">-- 等待音频数据 --</div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
+
+    <!-- 陪伴模式设置弹窗 -->
+    <div class="popup-overlay" id="companionSettingsOverlay" onclick="closeCompanionSettings()"></div>
+    <div class="settings-popup" id="companionSettingsPopup" style="max-width:560px;">
+        <div class="popup-header">
+            <div class="popup-title">
+                <span class="status-indicator"></span> 陪伴模式设置
+            </div>
+            <button class="popup-close-btn" onclick="closeCompanionSettings()">&times;</button>
+        </div>
+        <div class="input-group">
+            <label>👤 当前状态（如：在学习数学）</label>
+            <input type="text" id="companionStatusInput" placeholder="如：在学习数学、在复习...">
+        </div>
+        <div class="divider"></div>
+        <div class="input-group">
+            <label>📅 每周课表</label>
+            <div class="schedule-day-tabs" id="scheduleDayTabs"></div>
+            <div class="schedule-slots" id="scheduleSlots"></div>
+            <button class="schedule-add-btn" onclick="addScheduleSlot()">+ 添加课程时间段</button>
+        </div>
+        <div class="button-group">
+            <button class="close-popup" onclick="saveCompanionSettings()">保存设置</button>
+        </div>
+    </div>
+
+    <!-- AI记忆编辑器弹窗 -->
+    <div class="popup-overlay" id="memoryEditorOverlay" onclick="closeMemoryEditor()"></div>
+    <div class="settings-popup" id="memoryEditorPopup" style="max-width:700px;">
+        <div class="popup-header">
+            <div class="popup-title">
+                <span class="status-indicator"></span> AI记忆编辑器
+            </div>
+            <button class="popup-close-btn" onclick="closeMemoryEditor()">&times;</button>
+        </div>
+        <div class="tip" style="margin-bottom:12px;">
+            AI可以使用「companion_memory_read」和「companion_memory_write」工具来读写此记忆。
+            你也可以在这里手动编辑。格式为Markdown。
+        </div>
+        <div class="input-group">
+            <label>📝 记忆内容（每轮对话独立）</label>
+            <p style="font-size:0.8rem; color:#718096; margin-bottom:8px;">对话ID：<span id="memoryHisidDisplay">--</span></p>
+            <textarea id="memoryEditorTextarea" class="memory-editor-textarea" placeholder="加载中..."></textarea>
+        </div>
+        <div class="button-group">
+            <button class="close-popup" onclick="closeMemoryEditor()" style="background:#edf2f7; color:#4a5568;">取消</button>
+            <button class="close-popup" onclick="saveMemoryEditor()">保存记忆</button>
+        </div>
+    </div>
+
     <script>
         // 初始化markdown-it解析器
         const md = window.markdownit({
@@ -202,41 +667,167 @@
                 return null;
             }
         }
-        async function editHistory(){
+        // —— 编辑/删除/重试功能 ——
+        let editTargetId = null;
 
+        // 编辑消息：打开编辑弹窗
+        function editMessage(element, id) {
+            if (id === undefined) return;
+            if (!historyData) return;
+            const msg = historyData.find(m => m.id === id);
+            if (!msg) return;
+            document.getElementById('msgContent').value = msg.content;
+            editTargetId = id;
+            openEditing();
         }
-        // 获取AI回复
-        async function getReply(search) {
-            const userInput = getUserInput();
-            const sysPrompt = getSysPrompt();
-            const temp = document.getElementById("temp").value;
-            const historyId = getHistoryid();
-            const model = document.getElementById("model").value;
-            
+
+        // 保存编辑：调后端API
+        async function saveEditing(selfCall=false) {
+            const newContent = document.getElementById('msgContent').value;
+            if (!newContent) {
+                alert('内容不能为空');
+                return;
+            }
+            const hisid = getHistoryid();
+            if (!hisid) {
+                alert('设置历史记录名称后才能使用这些功能');
+                return;
+            }
             try {
-                requestBody =
-                new Request('/api/get', {
-                    method: 'post',
-                    headers: {
-                        'Content-Type': 'application/json;charset=utf-8;'
-                    },
+                const response = await fetch('/api/history/update', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                    "user": userInput, 
-                    "system": sysPrompt, 
-                    "temp": temp, 
-                    "hisid": historyId, 
-                    "model": model,
-                    "search": search
-                })
-                })
-                const response = await fetch(requestBody)
-                return response;
+                        hisid: hisid,
+                        action: 'edit',
+                        index: editTargetId,
+                        content: newContent
+                    })
+                });
+                if (!response.ok) {
+                    const errText = await response.text();
+                    alert('编辑失败: ' + errText);
+                    return;
+                }
+                historyData = await response.json();
+                exitEditing();
+                const historyElement = document.getElementById('history');
+                historyElement.innerHTML = '';
+                if (historyData.length === 0) {
+                    historyElement.innerHTML = '<div class="history-placeholder">该历史记录中没有对话内容</div>';
+                } else {
+                    rendermessages(historyData, historyElement);
+                }
             } catch (error) {
-                console.error("获取AI回复失败:", error);
-                return '';
+                alert('编辑失败: ' + error.message);
             }
         }
-        
+
+        // 删除消息
+        async function deleteMessage(element, id) {
+            if (id === undefined) return;
+            const hisid = getHistoryid();
+            if (!hisid) {
+                alert('请先设置历史记录名称');
+                return;
+            }
+            try {
+                const response = await fetch('/api/history/update', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        hisid: hisid,
+                        action: 'delete',
+                        index: id
+                    })
+                });
+                if (!response.ok) {
+                    const errText = await response.text();
+                    alert('删除失败: ' + errText);
+                    return;
+                }
+                historyData = await response.json();
+                const historyElement = document.getElementById('history');
+                historyElement.innerHTML = '';
+                if (historyData.length === 0) {
+                    historyElement.innerHTML = '<div class="history-placeholder">该历史记录中没有对话内容</div>';
+                } else {
+                    rendermessages(historyData, historyElement);
+                }
+            } catch (error) {
+                alert('删除失败: ' + error.message);
+            }
+        }
+
+        // 重试消息
+        async function retryMessage(id) {
+            if (!confirm("重试操作将会删除这之后的所有内容，你确定吗？")){return}
+            if (id === undefined) return;
+            if (!historyData) return;
+            const msg = historyData.find(m => m.id === id);
+            if (!msg) return;
+            const hisid = getHistoryid();
+            if (!hisid) {
+                alert('请先设置历史记录名称');
+                return;
+            }
+            try {
+                if (msg.role === 'assistant') {
+                    // AI消息：删掉它和之后的内容，把上一条用户消息放回输入框
+                    const response = await fetch('/api/history/update', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            hisid: hisid,
+                            action: 'retry',
+                            index: id
+                        })
+                    });
+                    if (!response.ok) {
+                        const errText = await response.text();
+                        alert('重试失败: ' + errText);
+                        return;
+                    }
+                    historyData = await response.json();
+                    // 把最后一条用户消息放回输入框
+                    if (historyData.length > 0) {
+                        const lastMsg = historyData[historyData.length - 1];
+                        if (lastMsg.role === 'user') {
+                            document.getElementById('userinp').value = lastMsg.content;
+                        }
+                    }
+                } else {
+                    // 用户消息：删掉它之后的内容，把自己放回输入框
+                    const response = await fetch('/api/history/update', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            hisid: hisid,
+                            action: 'retry',
+                            index: id + 1
+                        })
+                    });
+                    if (!response.ok) {
+                        const errText = await response.text();
+                        alert('重试失败: ' + errText);
+                        return;
+                    }
+                    historyData = await response.json();
+                    document.getElementById('userinp').value = msg.content;
+                }
+                // 重绘
+                const historyElement = document.getElementById('history');
+                historyElement.innerHTML = '';
+                if (historyData.length === 0) {
+                    historyElement.innerHTML = '<div class="history-placeholder">该历史记录中没有对话内容</div>';
+                } else {
+                    rendermessages(historyData, historyElement);
+                }
+            } catch (error) {
+                alert('重试失败: ' + error.message);
+            }
+        }
+
         // 渲染Markdown和LaTeX内容
         function renderContent(text) {
             function escapeBackslashes(str) {
@@ -248,7 +839,6 @@
   });
 }
             text = escapeBackslashes(text);
-            console.log(text)
             // 使用markdown-it解析Markdown
             let html = md.render(text);
             
@@ -266,6 +856,7 @@
             
             try {
                 const historyResponse = await getHistory(historyId);
+                // 临时对话：请求失败或404不弹alert，静默显示空历史
                 if (!historyResponse || !historyResponse.ok) {
                     alert("获取历史记录出错");
                     return;
@@ -276,7 +867,10 @@
                 historyElement.innerHTML = '';
                 
                 if (!historyData || historyData.length === 0) {
-                    historyElement.innerHTML = '<div class="history-placeholder">该历史记录中没有对话内容</div>';
+                    const placeholder = historyId.startsWith('_t_')
+                        ? '<div class="history-placeholder">新临时对话</div>'
+                        : '<div class="history-placeholder">该历史记录中没有对话内容</div>';
+                    historyElement.innerHTML = placeholder;
                     return;
                 }
                 
@@ -300,7 +894,7 @@
                                 <button class="msgButton" onclick="editMessage(this, ${item.id})">编辑</button>
                             </div>
                         </div>
-                        <div class="message-content">${renderContent(item.content)}</div>
+                        <div class="message-content">${renderContent(stripCompanionPrefix(item.content))}</div>
                     `;
                     } else if (item.role === 'assistant') {
                         messageElement.className = 'assistant-message';
@@ -315,8 +909,15 @@
                             <div class="message-content">${renderContent(item.content)}</div>
                         `;
                     } else if (item.role === 'system') {
-                        // 系统消息不显示
-                        return;
+                        messageElement.className = 'system-message';
+                        messageElement.innerHTML = `
+                            <div class="message-header">对话设定:
+                                <div style="margin-left:auto; display:flex; flex-direction:row; ">
+                                    <button class="msgButton" onclick="editMessage(this, ${item.id})">编辑</button>
+                                </div>
+                            </div>
+                            <div class="message-content">${renderContent(item.content)}</div>
+                        `;
                     }
                     historyElement.appendChild(messageElement);
                 });
@@ -387,6 +988,7 @@
             const temp = document.getElementById("temp").value;
             const historyId = getHistoryid();
             const model = document.getElementById("model").value;
+            const think = document.getElementById("use_think").checked ? "enabled" : "disabled";
             // 准备请求数据（假设这些变量已在外部定义）
             const requestData = {
                     "user": userInput, 
@@ -394,7 +996,9 @@
                     "temp": temp, 
                     "hisid": historyId, 
                     "model": model,
-                    "search": isinternet
+                    "search": isinternet,
+                    "use_think":
+think
                 };
 
             try {
@@ -456,10 +1060,13 @@
                 // 流式结束，更新余额（原来在获取回复后调用的逻辑）
                 await updateMoney();
 
+                // 流式完成后刷新历史列表（让消息带上 id，编辑/删除/重试才能用）
+                if (getHistoryid()){
+                await flashHistory();}
+
             } catch (error) {
                 // 处理取消错误
                 if (error.name === 'AbortError') {
-                    console.log('用户停止了生成');
                     // 可选：在内容区显示停止提示
                     if (loadingElement && loadingElement.innerHTML.includes('思考中')) {
                         loadingElement.innerHTML = `
@@ -471,7 +1078,7 @@
                         <button class="msgButton" onclick="stopStream()">停止</button>
                     </div>
                 </div>
-                            <div class="message-content">生成已停止。</div>
+                            <div class="message-content">生成已取消。</div>
                         `;
                     } else {
                         // 如果已经有内容，追加停止提示（不覆盖已有内容）
@@ -488,7 +1095,7 @@
                         <button class="msgButton" onclick="stopStream()">停止</button>
                     </div>
                 </div>
-                                <div class="message-content">生成已停止。</div>
+                                <div class="message-content">生成已取消。</div>
                             `;
                         }
                     }
@@ -530,9 +1137,6 @@ function stopStream() {
 
             // 重新渲染数学公式
             MathJax.typesetPromise();
-            
-            // 滚动到底部
-            historyElement.scrollTop = historyElement.scrollHeight;
         }
         
         // 获取历史记录ID
@@ -604,6 +1208,7 @@ function stopStream() {
         document.addEventListener('DOMContentLoaded', function() {
             updateMoney();
             updateSettingsSummary();
+            loadCompanionConfig();  // 加载陪伴模式配置
             
             // 初始化历史记录区域
             const historyElement = document.getElementById('history');
@@ -615,8 +1220,6 @@ function stopStream() {
             
             // 渲染数学公式
             MathJax.startup.promise.then(() => {
-    // 现在 MathJax 已完全初始化，可以安全调用其所有方法
-    console.log('MathJax 已就绪，正在排版...');
     MathJax.typesetPromise();
 }).catch((err) => {
     console.error('MathJax 初始化失败:', err);
@@ -626,9 +1229,679 @@ function stopStream() {
         // 监听设置变化
         document.getElementById('model').addEventListener('change', updateSettingsSummary);
         document.getElementById('temp').addEventListener('change', updateSettingsSummary);
+        // ════════════════════════════════════════
+        // OCR 图片识别 & 快捷输入预设
+        // ════════════════════════════════════════
+        
+        const OCR_PRESETS_KEY = 'ai_input_presets';
+        // 推荐预设
+        const OCR_PRESETS_DEFAULT = ["我是一名高二的学生，我的数学解题能力不足. 你能否在我解题的时候 ,给我一点的提示，但不要直接给我答案或者公式.提示的字数应当人简短，提示的内容具有启发性,不能直接揭示关键思路", "读不懂题","无思路","卡在中间","算错","检查反思"];
+
+        // --- 加载预设 ---
+        function loadPresets() {
+            const stored = localStorage.getItem(OCR_PRESETS_KEY);
+            if (stored) {
+                try {
+                    const parsed = JSON.parse(stored);
+                    if (Array.isArray(parsed)) return parsed;
+                } catch(e) {}
+            }
+            return [...OCR_PRESETS_DEFAULT];
+        }
+
+        // --- 保存预设 ---
+        function savePresets(presets) {
+            localStorage.setItem(OCR_PRESETS_KEY, JSON.stringify(presets));
+        }
+
+        // --- 渲染所有预设按钮---
+        function renderAllPresetButtons() {
+            const presets = loadPresets();
+            // 输入框下方的预设区（第一个）
+            const inputArea = document.getElementById('inputPresetsArea');
+            // 底部预设区
+            const inputAreaBottom = document.getElementById('inputPresetsAreaBottom');
+            // OCR 面板内的预设区
+            const ocrArea = document.getElementById('ocrPresetsArea');
+
+            [inputArea, inputAreaBottom, ocrArea].forEach(container => {
+                if (!container) return;
+                container.innerHTML = '';
+                presets.forEach(text => {
+                    const btn = document.createElement('button');
+                    btn.className = 'preset-btn';
+                    btn.textContent = text.length > 15 ? text.substring(0, 15) + '…' : text;
+                    btn.title = text;
+                    btn.onclick = function() { appendPresetText(text); };
+                    container.appendChild(btn);
+                });
+            });
+        }
+
+        // --- 追加预设文本到输入框末尾 ---
+        function appendPresetText(text) {
+            const input = document.getElementById('userinp');
+            input.value += text;
+            input.focus();
+        }
+
+        // --- 选择图片 ---
+        function selectOcrImage() {
+            document.getElementById('ocrFileInput').click();
+        }
+
+        // --- 处理 OCR 图片 ---
+        let ocrLoading = false;
+        async function handleOcrImage(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            if (file.size > 10 * 1024 * 1024) {
+                alert('图片太大，请选择小于10MB的图片');
+                input.value = '';
+                return;
+            }
+
+            if (!file.type.startsWith('image/')) {
+                alert('请选择图片文件');
+                input.value = '';
+                return;
+            }
+
+            ocrLoading = true;
+            const panel = document.getElementById('ocrResultPanel');
+            const textDiv = document.getElementById('ocrResultText');
+            textDiv.textContent = '识别中...';
+            panel.style.display = 'block';
+
+            try {
+                const base64Data = await readFileAsDataURL(file);
+                const response = await fetch('/ai/ocr', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: base64Data })
+                });
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    textDiv.textContent = '识别失败: ' + (err.error || response.statusText);
+                    return;
+                }
+
+                const result = await response.json();
+                if (result.text) {
+                    textDiv.textContent = result.text;
+                } else {
+                    textDiv.textContent = '[未识别到文字]';
+                }
+
+                // 渲染 OCR 面板内的预设按钮
+                renderAllPresetButtons();
+
+            } catch (error) {
+                textDiv.textContent = '识别失败: ' + error.message;
+            } finally {
+                ocrLoading = false;
+                input.value = '';
+            }
+        }
+
+        // --- FileReader 封装 ---
+        function readFileAsDataURL(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = () => reject(new Error('读取文件失败'));
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // --- 复制 OCR 结果 ---
+        function copyOcrResult() {
+            const text = document.getElementById('ocrResultText').textContent;
+            if (!text || text === '识别中...') return;
+            navigator.clipboard.writeText(text).catch(() => {
+                // fallback
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                ta.remove();
+            });
+        }
+
+        // --- 将 OCR 结果填入输入框 ---
+        function useOcrResult() {
+            const text = document.getElementById('ocrResultText').textContent;
+            if (!text || text === '识别中...') return;
+            document.getElementById('userinp').value = text;
+            closeOcrPanel();
+        }
+
+        // --- 关闭 OCR 面板 ---
+        function closeOcrPanel() {
+            document.getElementById('ocrResultPanel').style.display = 'none';
+        }
+
+        // ════════════════════════════════════════
+        // 预设编辑器
+        // ════════════════════════════════════════
+
+        // --- 打开预设编辑器 ---
+        function openPresetEditor() {
+            document.getElementById('presetEditorOverlay').classList.add('active');
+            document.getElementById('presetEditorPopup').classList.add('active');
+            renderPresetEditor();
+        }
+
+        function closePresetEditor() {
+            document.getElementById('presetEditorOverlay').classList.remove('active');
+            document.getElementById('presetEditorPopup').classList.remove('active');
+        }
+
+        // --- 渲染预设编辑列表 ---
+        function renderPresetEditor() {
+            const presets = loadPresets();
+            const container = document.getElementById('presetEditList');
+            container.innerHTML = '';
+            presets.forEach((text, index) => {
+                const div = document.createElement('div');
+                div.className = 'preset-edit-item';
+                div.innerHTML = `
+                    <input type="text" value="${escapeHtml(text)}" data-index="${index}">
+                    <button class="secondary-btn" onclick="removePresetItem(${index})" style="background:#fee2e2;">✕</button>
+                `;
+                container.appendChild(div);
+            });
+            if (presets.length === 0) {
+                container.innerHTML = '<div style="color:#94a3b8; padding:10px; text-align:center;">暂无快捷输入内容</div>';
+            }
+        }
+
+        function escapeHtml(text) {
+            return text.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        // --- 添加预设项 ---
+        function addPresetItem() {
+            const presets = loadPresets();
+            presets.push('');
+            savePresets(presets);
+            renderPresetEditor();
+        }
+
+        // --- 移除预设项 ---
+        function removePresetItem(index) {
+            const presets = loadPresets();
+            presets.splice(index, 1);
+            savePresets(presets);
+            renderPresetEditor();
+        }
+
+        // --- 保存编辑器中所有预设 ---
+        function savePresetEditor() {
+            const inputs = document.querySelectorAll('#presetEditList input[type="text"]');
+            const presets = [];
+            inputs.forEach(input => {
+                const val = input.value.trim();
+                if (val) presets.push(val);
+            });
+            savePresets(presets);
+            renderAllPresetButtons();
+            closePresetEditor();
+        }
+
+        // --- 重置为推荐预设 ---
+        function resetPresets() {
+            if (!confirm('确定重置为推荐设置？自定义的快捷输入将被清除。')) return;
+            savePresets([...OCR_PRESETS_DEFAULT]);
+            renderAllPresetButtons();
+            renderPresetEditor();
+        }
+
+        // 页面加载完成后渲染预设按钮
+        (function initPresets() {
+            // 等 DOM 加载完再渲染
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', renderAllPresetButtons);
+            } else {
+                renderAllPresetButtons();
+            }
+        })();
+
         //网络ai：）
         function internethandle(){
         handle(true)
+        }
+
+        // ════════════════════════════════════════
+        // 陪伴模式
+        // ════════════════════════════════════════
+
+        // 星期映射
+        const ENG_DAYS = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+        const CN_DAYS = ['星期一','星期二','星期三','星期四','星期五','星期六','星期日'];
+        let companionData = null;  // 缓存当前的陪伴配置
+
+        // 加载陪伴模式配置
+        async function loadCompanionConfig() {
+            try {
+                const resp = await fetch('/companion/config');
+                if (!resp.ok) return;
+                const data = await resp.json();
+                companionData = data;
+                
+                // 设置开关状态
+                document.getElementById('companionToggle').checked = data.companion_enabled || false;
+                
+                // 更新状态显示
+                updateCompanionStatusDisplay(data);
+            } catch(e) {
+                console.error('陪伴模式加载失败:', e);
+            }
+        }
+
+        // 更新陪伴模式状态显示
+        function updateCompanionStatusDisplay(data) {
+            const statusBar = document.getElementById('companionStatusBar');
+            if (!data || !data.companion_enabled) {
+                statusBar.classList.remove('active');
+                return;
+            }
+            document.getElementById('companionTime').textContent = data.current_time || '--';
+            document.getElementById('companionClassStatus').textContent = data.current_class || '--';
+            document.getElementById('companionUserStatus').textContent = data.user_status || '--';
+            statusBar.classList.add('active');
+        }
+
+        // 切换陪伴模式
+        async function toggleCompanion() {
+            const enabled = document.getElementById('companionToggle').checked;
+            try {
+                const resp = await fetch('/companion/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 'companion_enabled': enabled })
+                });
+                if (!resp.ok) {
+                    document.getElementById('companionToggle').checked = !enabled;
+                    alert('切换失败');
+                    return;
+                }
+                const result = await resp.json();
+                companionData = result.config;
+                // 重新获取完整状态（含当前时间）
+                await loadCompanionConfig();
+            } catch(e) {
+                document.getElementById('companionToggle').checked = !enabled;
+                console.error('切换失败:', e);
+            }
+        }
+
+        // ─── 陪伴模式设置弹窗 ─────────────────────
+        let _editingDay = 'monday';
+
+        function openCompanionSettings() {
+            if (!companionData) { loadCompanionConfig(); return; }
+            document.getElementById('companionStatusInput').value = companionData.user_status || '';
+            document.getElementById('companionSettingsOverlay').classList.add('active');
+            document.getElementById('companionSettingsPopup').classList.add('active');
+            renderScheduleDayTabs();
+            renderScheduleSlots('monday');
+        }
+
+        function closeCompanionSettings() {
+            document.getElementById('companionSettingsOverlay').classList.remove('active');
+            document.getElementById('companionSettingsPopup').classList.remove('active');
+        }
+
+        // 渲染课表日标签
+        function renderScheduleDayTabs() {
+            const container = document.getElementById('scheduleDayTabs');
+            container.innerHTML = '';
+            CN_DAYS.forEach((cn, i) => {
+                const day = ENG_DAYS[i];
+                const tab = document.createElement('button');
+                tab.className = 'schedule-day-tab' + (day === _editingDay ? ' active' : '');
+                tab.textContent = cn;
+                tab.onclick = function() {
+                    // 先保存当前天的编辑内容
+                    saveCurrentDaySlots();
+                    _editingDay = day;
+                    renderScheduleDayTabs();
+                    renderScheduleSlots(day);
+                };
+                container.appendChild(tab);
+            });
+        }
+
+        // 渲染当天课表时间段
+        function renderScheduleSlots(day) {
+            const container = document.getElementById('scheduleSlots');
+            container.innerHTML = '';
+            const schedule = (companionData.week_schedule || {})[day] || [];
+            if (schedule.length === 0) {
+                container.innerHTML = '<div style="color:#94a3b8;padding:10px;text-align:center;font-size:0.85rem;">暂无课程，点击下方添加</div>';
+                return;
+            }
+            schedule.forEach((slot, idx) => {
+                const div = document.createElement('div');
+                div.className = 'schedule-slot';
+                div.innerHTML = `
+                    <input type="time" value="${slot.start || '08:00'}" data-idx="${idx}" data-field="start" onchange="updateSlotField(this)">
+                    <span style="color:#94a3b8;">→</span>
+                    <input type="time" value="${slot.end || '08:40'}" data-idx="${idx}" data-field="end" onchange="updateSlotField(this)">
+                    <input type="text" value="${slot.name || ''}" placeholder="课程名" data-idx="${idx}" data-field="name" onchange="updateSlotField(this)">
+                    <button onclick="removeScheduleSlot(${idx})">✕</button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // 更新某个时间段字段
+        function updateSlotField(input) {
+            const idx = parseInt(input.dataset.idx);
+            const field = input.dataset.field;
+            const day = _editingDay;
+            const schedule = (companionData.week_schedule || {})[day] || [];
+            if (idx >= 0 && idx < schedule.length) {
+                schedule[idx][field] = input.value;
+            }
+        }
+
+        // 保存当前天的编辑（确保编辑的内容被持久化到companionData）
+        function saveCurrentDaySlots() {
+            // 数据已经在 updateSlotField 中实时更新到 companionData
+        }
+
+        // 添加课表时间段
+        function addScheduleSlot() {
+            const day = _editingDay;
+            if (!companionData.week_schedule) companionData.week_schedule = {};
+            if (!companionData.week_schedule[day]) companionData.week_schedule[day] = [];
+            companionData.week_schedule[day].push({ start: '08:00', end: '08:40', name: '新课程' });
+            renderScheduleSlots(day);
+        }
+
+        // 删除课表时间段
+        function removeScheduleSlot(idx) {
+            const day = _editingDay;
+            const schedule = (companionData.week_schedule || {})[day] || [];
+            if (idx >= 0 && idx < schedule.length) {
+                schedule.splice(idx, 1);
+                renderScheduleSlots(day);
+            }
+        }
+
+        // 保存陪伴模式设置
+        async function saveCompanionSettings() {
+            const status = document.getElementById('companionStatusInput').value.trim();
+            try {
+                const resp = await fetch('/companion/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        'user_status': status,
+                        'week_schedule': companionData.week_schedule || {}
+                    })
+                });
+                if (!resp.ok) { alert('保存失败'); return; }
+                await loadCompanionConfig();
+                closeCompanionSettings();
+            } catch(e) {
+                alert('保存失败: ' + e.message);
+            }
+        }
+
+        // ─── mic2text 实时音频 ──────────────────
+
+        let mic2textPollTimer = null;
+
+        // 从后端代理拉取 mic2text 数据
+        async function fetchMic2text() {
+            try {
+                const resp = await fetch('/api/mic2text?n=5');
+                if (!resp.ok) return;
+                const data = await resp.json();
+                updateMic2textDisplay(data);
+            } catch(e) {
+                // 服务不可用时静默失败
+            }
+        }
+
+        // 更新 mic2text 面板显示
+        function updateMic2textDisplay(data) {
+            const container = document.getElementById('mic2textContent');
+            const sentences = data.recent_sentences || [];
+            if (sentences.length === 0) {
+                container.innerHTML = '<div class="mic2text-empty">-- 等待音频数据 --</div>';
+                return;
+            }
+            let html = '';
+            sentences.forEach(function(s) {
+                html += '<div class="mic2text-item">' + escapeHtml(s.text) + '</div>';
+            });
+            container.innerHTML = html;
+        }
+
+        function escapeHtml(text) {
+            var div = document.createElement('div');
+            div.appendChild(document.createTextNode(text));
+            return div.innerHTML;
+        }
+
+        // 启动定时轮询（每 3 秒）
+        function startMic2textPolling() {
+            stopMic2textPolling();
+            fetchMic2text();
+            mic2textPollTimer = setInterval(fetchMic2text, 3000);
+        }
+
+        function stopMic2textPolling() {
+            if (mic2textPollTimer) {
+                clearInterval(mic2textPollTimer);
+                mic2textPollTimer = null;
+            }
+        }
+
+        // 保存显示偏好到服务端陪伴模式设置
+        async function saveMic2textPref() {
+            const show = document.getElementById('showMic2textInChat').checked;
+            const toAi = document.getElementById('sendMic2textToAi').checked;
+            const showTime = document.getElementById('showTimeElapsed').checked;
+            try {
+                await fetch('/companion/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        'mic2text_show_in_chat': show,
+                        'mic2text_in_context': toAi,
+                        'show_time_elapsed': showTime
+                    })
+                });
+            } catch(e) {
+                console.error('保存偏好失败:', e);
+            }
+        }
+
+        // 从服务端配置加载偏好（在 loadCompanionConfig 里调）
+        function loadMic2textPref() {
+            const show = companionData && companionData.mic2text_show_in_chat;
+            document.getElementById('showMic2textInChat').checked = !!show;
+            const toAi = companionData && companionData.mic2text_in_context;
+            document.getElementById('sendMic2textToAi').checked = toAi !== false;
+            const showTime = companionData && companionData.show_time_elapsed;
+            document.getElementById('showTimeElapsed').checked = !!showTime;
+
+            // 仅在服务端偏好与页面当前开关不同时才写回，避免不必要地覆盖用户当前临时对话状态
+            try {
+                const tempChat = companionData && companionData.temp_chat_enabled;
+                const tempToggle = document.getElementById('tempChatToggle');
+                if (tempToggle && typeof tempChat !== 'undefined') {
+                    const desired = tempChat !== false;
+                    // 只在不同的时候更新属性，避免触发后续清理逻辑
+                    if (tempToggle.checked !== desired) {
+                        tempToggle.checked = desired;
+                        // 不主动调用 onTempChatToggle()，保持页面状态稳定，由用户手动切换或专门的初始化逻辑处理
+                    }
+                }
+            } catch (e) {
+                console.error('loadMic2textPref error:', e);
+            }
+        }
+
+        // 从消息文本中剥离陪伴模式前缀（用于显示时隐藏自动注入的内容）
+        function stripCompanionPrefix(text) {
+            // 如果显示开关打开，啥都不去掉
+            if (document.getElementById('showMic2textInChat').checked) {
+                return text;
+            }
+            // 用 [--音频结束--] 标记精确定位音频块结尾，标记前全是前缀
+            var marker = '[--音频结束--]';
+            var markerIndex = text.indexOf(marker);
+            if (markerIndex !== -1) {
+                return text.slice(markerIndex + marker.length).trimStart();
+            }
+            // 无标记时（旧消息或没开音频），用正则匹配前缀字段
+            var stripped = text.replace(
+                /^\[当前时间：[^\]]*\]\s*\n\[用户状态：[^\]]*\]\s*\n\[当前课：[^\]]*\](?:\s*\n\[距(?:下课|上课)：[^\]]*\])?(?:\s*\n\[距上次对话：[^\]]*\])?(?:\s*\n\[教室实时音频：[\s\S]*?\]\n)?/,
+                ''
+            );
+            return stripped || text;
+        }
+
+        // 覆盖原有的 loadCompanionConfig 以管理 mic2text 面板
+        var _origLoadCompanion = loadCompanionConfig;
+        loadCompanionConfig = async function() {
+            await _origLoadCompanion();
+            // 陪伴模式开启时显示 mic2text 面板并开始轮询
+            const enabled = document.getElementById('companionToggle').checked;
+            const micSection = document.getElementById('mic2textSection');
+            if (enabled) {
+                micSection.classList.add('active');
+                startMic2textPolling();
+            } else {
+                micSection.classList.remove('active');
+                stopMic2textPolling();
+                document.getElementById('mic2textContent').innerHTML = '<div class="mic2text-empty">-- 等待音频数据 --</div>';
+            }
+            loadMic2textPref();
+            initTempChat();
+        };
+
+        // ─── 临时对话 ──
+
+        let currentTempChatId = null;
+
+        async function initTempChat() {
+            // 根据开关状态初始化
+            const toggle = document.getElementById('tempChatToggle');
+            if (!toggle) return;
+            const hisid = getHistoryid();
+            if (toggle.checked) {
+                console.log('初始化临时对话');
+                // 开关开启：设为临时对话
+                try {
+                    const resp = await fetch('/api/temp_chat/clear');
+                    if (!resp.ok) return;
+                    document.getElementById('hisid').value = '_t_'+ await getName();
+                    document.getElementById('hisid').dataset.temp = '1';
+                    document.getElementById('hisid').readOnly = true;
+                    document.getElementById('history').innerHTML = '<div class="history-placeholder">新对话</div>';
+                } catch(e) {
+                    console.error('临时对话初始化失败:', e);
+                }
+            } else {
+                // 开关关闭：如果是临时对话的 ID，清空
+                if (hisid && hisid.startsWith('_t_')) {
+                    document.getElementById('hisid').value = '';
+                    document.getElementById('hisid').dataset.temp = '';
+                    document.getElementById('hisid').readOnly = false;
+                    document.getElementById('history').innerHTML = '';
+                }
+            }
+        }
+
+        async function onTempChatToggle() {
+            const toggle = document.getElementById('tempChatToggle');
+            if (toggle.checked) {
+                // 开启临时对话：清空旧历史，设为固定临时 ID
+                try {
+                    const resp = await fetch('/api/temp_chat/clear');
+                    if (!resp.ok) return;
+                    document.getElementById('hisid').value = '_t_'+ await getName();
+                    document.getElementById('hisid').dataset.temp = '1';
+                    document.getElementById('hisid').readOnly = true;
+                    document.getElementById('history').innerHTML = '<div class="history-placeholder">新对话</div>';
+                } catch(e) {
+                    console.error('创建临时对话失败:', e);
+                }
+            } else {
+                // 关闭临时对话：还原
+                currentTempChatId = null;
+                document.getElementById('hisid').value = '';
+                document.getElementById('hisid').dataset.temp = '';
+                document.getElementById('hisid').readOnly = false;
+                document.getElementById('history').innerHTML = '';
+            }
+            // 保存偏好
+            try {
+                await fetch('/companion/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 'temp_chat_enabled': toggle.checked })
+                });
+            } catch(e) {
+                console.error('保存临时对话偏好失败:', e);
+            }
+        }
+
+        // ─── AI记忆编辑器 ────────────────────────
+
+        function openMemoryEditor() {
+            const hisid = getHistoryid();
+            document.getElementById('memoryHisidDisplay').textContent = hisid;
+            document.getElementById('memoryEditorOverlay').classList.add('active');
+            document.getElementById('memoryEditorPopup').classList.add('active');
+            document.getElementById('memoryEditorTextarea').value = '加载中...';
+            loadMemoryContent(hisid);
+        }
+
+        function closeMemoryEditor() {
+            document.getElementById('memoryEditorOverlay').classList.remove('active');
+            document.getElementById('memoryEditorPopup').classList.remove('active');
+        }
+
+        async function loadMemoryContent(hisid) {
+            try {
+                const resp = await fetch('/companion/memory?hisid=' + encodeURIComponent(hisid));
+                if (!resp.ok) {
+                    document.getElementById('memoryEditorTextarea').value = '加载失败';
+                    return;
+                }
+                const data = await resp.json();
+                document.getElementById('memoryEditorTextarea').value = data.content || '# AI 记忆\n\n（暂无内容）';
+            } catch(e) {
+                document.getElementById('memoryEditorTextarea').value = '加载失败: ' + e.message;
+            }
+        }
+
+        async function saveMemoryEditor() {
+            const hisid = getHistoryid();
+            const content = document.getElementById('memoryEditorTextarea').value;
+            try {
+                const resp = await fetch('/companion/memory?hisid=' + encodeURIComponent(hisid), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 'content': content })
+                });
+                if (!resp.ok) { alert('保存失败'); return; }
+                alert('记忆已保存');
+                closeMemoryEditor();
+            } catch(e) {
+                alert('保存失败: ' + e.message);
+            }
         }
     </script>
 </body>

@@ -6,7 +6,8 @@ from config import date, message_dir
 from tools import (
     userlist,
     WSAvailable as available,
-    KeyDecoder
+    KeyDecoder,
+    track_visit,
 )
 
 GROUPS_FILE = os.path.join(message_dir, 'groups.json')
@@ -97,7 +98,7 @@ def send_msg():
     if not sender:
         return '{"content":"No username provided"}'
     content = str(request.args.get('content'))
-    targetuser = str(request.args.get('targetuser'))
+    targetuser = str(request.args.get('targetuser',""))
     key = request.args.get('key', "default")
     if not key:
         key = 'default'
@@ -114,6 +115,7 @@ def send_msg():
         # 公共聊天
         targetFile = f'msg{date}.json'
     else:
+        print("targetuser:", targetuser)
         # 一对一私聊
         targetFile = ''
         for i in os.scandir(message_dir):
@@ -148,6 +150,7 @@ def announce():
             return f.read()
 
 def talker():
+    track_visit('聊天')
     return available('talk.html')
 
 # 群聊管理函数
